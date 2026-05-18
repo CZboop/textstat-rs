@@ -1,0 +1,13 @@
+[package]
+name = "textstat-rs"
+version = "0.1.0"
+edition = "2024"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "textstat_rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = "0.28.3"
+rust_readability = "0.2.0"
