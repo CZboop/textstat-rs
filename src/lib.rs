@@ -51,6 +51,11 @@ mod textstat_rs {
     fn spache_readability(text: &str) -> PyResult<f64> {
         Ok(formulas::spache_readability(text))
     }
+
+    #[pyfunction]
+    fn dale_chall_readability_score(text: &str) -> PyResult<f64> {
+        Ok(formulas::dale_chall_readability_score(text))
+    }
 }
 
 mod data;

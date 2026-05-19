@@ -100,6 +100,22 @@ pub(crate) fn spache_readability(text: &str) -> f64 {
     }
 }
 
+pub(crate) fn dale_chall_readability_score(text: &str) -> f64 {
+    let word_count = word_count(text);
+    let hard_count = count_difficult_words(text, 0);
+    if word_count == 0 {
+        return 0.0;
+    } else {
+        let per_difficult_words = 100 * hard_count / word_count;
+        let mut score =
+            (0.1579 * per_difficult_words as f64) + (0.0496 * words_per_sentence(text) as f64);
+        if per_difficult_words > 5 {
+            score += 3.6365
+        }
+        score
+    }
+}
+
 // TODO: relies on other metrics not yet implemented
 // pub(crate) fn text_standard(text: &str) -> f64 {
 //     0.0
