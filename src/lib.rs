@@ -62,6 +62,11 @@ mod textstat_rs {
     fn gunning_fog(text: &str, syllable_threshold: usize) -> PyResult<f64> {
         Ok(formulas::gunning_fog(text, syllable_threshold))
     }
+
+    #[pyfunction]
+    fn smog_index(text: &str) -> PyResult<f64> {
+        Ok(formulas::smog_index(text))
+    }
 }
 
 mod data;

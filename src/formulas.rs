@@ -1,6 +1,6 @@
 use crate::counts::{
-    char_count, count_difficult_words, letter_count, miniword_count, sentence_count,
-    syllable_count, word_count, words_per_sentence,
+    char_count, count_difficult_words, letter_count, miniword_count, polysyllable_word_count,
+    sentence_count, syllable_count, word_count, words_per_sentence,
 };
 use crate::syllable::count_syllables;
 use crate::tokenize::{sentence_list, word_list};
@@ -125,6 +125,12 @@ pub(crate) fn gunning_fog(text: &str, syllable_threshold: usize) -> f64 {
         let per_difficult_words = 100.0 * difficult_words as f64 / total_words as f64;
         0.4 * (words_per_sentence(text) as f64 + per_difficult_words)
     }
+}
+
+pub(crate) fn smog_index(text: &str) -> f64 {
+    let sentences = sentence_count(text) as f64;
+    let poly_syllab = polysyllable_word_count(text) as f64;
+    (1.043 * (30.0 * (poly_syllab / sentences)).sqrt()) + 3.1291
 }
 
 // TODO: relies on other metrics not yet implemented

@@ -80,3 +80,9 @@ def test_gunning_fog_parity(text):
     assert textstat_rs.gunning_fog(text) == pytest.approx(
         textstat.gunning_fog(text), abs=6.0
     )
+
+@pytest.mark.parametrize("text", SAMPLE_TEXTS)
+def test_smog_index_parity(text):
+    assert textstat_rs.smog_index(text) == pytest.approx(
+        textstat.smog_index(text), abs=2.0
+    )

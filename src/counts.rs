@@ -26,11 +26,15 @@ pub(crate) fn word_count(text: &str) -> usize {
     word_list(text).len().max(1)
 }
 
-pub(crate) fn words_per_sentence(text: &str) -> usize {
-    word_list(text).len() / sentence_count(text)
+pub(crate) fn words_per_sentence(text: &str) -> f64 {
+    word_list(text).len() as f64 / sentence_count(text) as f64
 }
 
 pub(crate) fn count_difficult_words(text: &str, syllable_threshold: usize) -> usize {
     let easy_words = crate::data::easy_words();
     word_list(text).iter().filter(|w| {let lower = w.to_lowercase(); !easy_words.contains(lower.as_str()) && count_syllables(&lower) > syllable_threshold}).count()
+}
+
+pub(crate) fn polysyllable_word_count(text: &str) -> usize {
+    word_list(text).iter().map(|w| count_syllables(w)).filter(|c| *c >= 3).count()
 }
