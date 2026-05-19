@@ -56,3 +56,9 @@ def test_reading_time_parity(text):
     assert textstat_rs.reading_time(text) == pytest.approx(
         textstat.reading_time(text), abs=4.0
     )
+
+@pytest.mark.parametrize("text", SAMPLE_TEXTS)
+def test_mcalpine_eflaw_parity(text):
+    assert textstat_rs.mcalpine_eflaw(text) == pytest.approx(
+        textstat.mcalpine_eflaw(text), abs=10.0
+    )

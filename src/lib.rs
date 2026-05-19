@@ -41,4 +41,9 @@ mod textstat_rs {
     fn reading_time(text: &str, ms_per_char: f64) -> PyResult<f64> {
         Ok(formulas::reading_time(text, ms_per_char))
     }
+
+    #[pyfunction]
+    fn mcalpine_eflaw(text: &str) -> PyResult<f64> {
+        Ok(formulas::mcalpine_eflaw(text))
+    }
 }

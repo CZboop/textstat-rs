@@ -12,3 +12,7 @@ pub(crate) fn letter_count(text: &str) -> usize {
 pub(crate) fn syllable_count(text: &str) -> usize {
     word_list(text).iter().map(|w| count_syllables(w)).sum()
 }
+
+pub(crate) fn miniword_count(text: &str) -> usize {
+    word_list(text).iter().filter(|w| w.chars().count() <= 3).count()
+}

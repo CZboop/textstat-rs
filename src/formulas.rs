@@ -1,4 +1,4 @@
-use crate::counts::{char_count, letter_count, syllable_count};
+use crate::counts::{char_count, letter_count, syllable_count, miniword_count};
 use crate::syllable::count_syllables;
 use crate::tokenize::{sentence_list, word_list};
 
@@ -76,6 +76,17 @@ pub(crate) fn reading_time(text: &str, ms_per_char: f64) -> f64 {
     // TODO: char_count ignore_spaces boolean arg
     let time: f64 = ms_per_char * char_count(text) as f64 / 1000.0;
     time
+}
+
+pub(crate) fn mcalpine_eflaw(text: &str) -> f64 {
+    let n_words = word_list(text).len();
+    let n_sentences: usize = sentence_list(text).len();
+    // TODO: more central zero value handling?
+    if n_sentences == 0 {
+        return 0.0;
+      }
+    let n_miniwords: usize = miniword_count(text);
+    (n_words + n_miniwords) as f64 / n_sentences as f64
 }
 
 // TODO: relies on other metrics not yet implemented
