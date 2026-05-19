@@ -51,11 +51,13 @@ def test_linsear_write_formula_parity(text):
         textstat.linsear_write_formula(text), abs=4.0
     )
 
+
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_reading_time_parity(text):
     assert textstat_rs.reading_time(text) == pytest.approx(
         textstat.reading_time(text), abs=4.0
     )
+
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_mcalpine_eflaw_parity(text):
@@ -63,11 +65,13 @@ def test_mcalpine_eflaw_parity(text):
         textstat.mcalpine_eflaw(text), abs=10.0
     )
 
+
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_spache_readability_parity(text):
     assert textstat_rs.spache_readability(text) == pytest.approx(
         textstat.spache_readability(text), abs=2.0
     )
+
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_dale_chall_parity(text):
@@ -75,14 +79,23 @@ def test_dale_chall_parity(text):
         textstat.dale_chall_readability_score(text), abs=0.5
     )
 
+
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_gunning_fog_parity(text):
     assert textstat_rs.gunning_fog(text) == pytest.approx(
         textstat.gunning_fog(text), abs=6.0
     )
 
+
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_smog_index_parity(text):
     assert textstat_rs.smog_index(text) == pytest.approx(
         textstat.smog_index(text), abs=2.0
     )
+
+# # TODO: different format needed in lib, string and multiple grades rather than numeric
+# @pytest.mark.parametrize("text", SAMPLE_TEXTS)
+# def test_text_standard_parity(text):
+#     assert textstat_rs.text_standard(text) == pytest.approx(
+#         textstat.text_standard(text), abs=2.0
+#     )

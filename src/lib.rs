@@ -67,6 +67,11 @@ mod textstat_rs {
     fn smog_index(text: &str) -> PyResult<f64> {
         Ok(formulas::smog_index(text))
     }
+
+    #[pyfunction]
+    fn text_standard(text: &str) -> PyResult<i32> {
+        Ok(formulas::text_standard(text))
+    }
 }
 
 mod data;

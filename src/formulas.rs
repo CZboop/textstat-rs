@@ -4,6 +4,7 @@ use crate::counts::{
 };
 use crate::syllable::count_syllables;
 use crate::tokenize::{sentence_list, word_list};
+use std::collections::HashMap;
 
 pub(crate) fn flesch_reading_ease(text: &str) -> f64 {
     let words = word_list(text).len() as f64;
@@ -133,7 +134,91 @@ pub(crate) fn smog_index(text: &str) -> f64 {
     (1.043 * (30.0 * (poly_syllab / sentences)).sqrt()) + 3.1291
 }
 
-// TODO: relies on other metrics not yet implemented
-// pub(crate) fn text_standard(text: &str) -> f64 {
-//     0.0
-// }
+pub(crate) fn text_standard(text: &str) -> i32 {
+    let mut grade: Vec<i32> = Vec::new(); // TODO: add with_capacity once know num items? should be constant
+    // TODO: instead of pushing as you go, just create at the end?
+
+    // Flesch Kincaid Grade
+    let score = flesch_kincaid_grade(text);
+    let lower = score.floor() as i32;
+    let upper = score.ceil() as i32;
+    let near = score.round() as i32; // TODO: verify details (of rounding)
+
+    grade.extend([lower, upper, near]);
+
+    // Flesch Reading Ease
+    let score = flesch_reading_ease(text);
+    if score < 100.0 && score >= 90.0 {
+        grade.push(5);
+    } else if score < 90.0 && score >= 80.0 {
+        grade.push(6);
+    } else if score < 80.0 && score >= 70.0 {
+        grade.push(7);
+    } else if score < 70.0 && score >= 60.0 {
+        grade.push(8);
+        grade.push(9);
+    } else if score < 60.0 && score >= 50.0 {
+        grade.push(10);
+    } else if score < 50.0 && score >= 40.0 {
+        grade.push(11);
+    } else if score < 40.0 && score >= 30.0 {
+        grade.push(12);
+    } else {
+        grade.push(13);
+    }
+
+    // SMOG Index
+    let score = smog_index(text);
+    let lower = score.floor() as i32;
+    let upper = score.floor() as i32;
+    let near = score.round() as i32;
+    grade.extend([lower, upper, near]);
+
+    // Coleman_Liau_Index
+    let score = coleman_liau_index(text);
+    let lower = score.floor() as i32;
+    let upper = score.ceil() as i32;
+    let near = score.round() as i32;
+    grade.extend([lower, upper, near]);
+
+    // Automated_Readability_Index
+    let score = automated_readability_index(text);
+    let lower = score.floor() as i32;
+    let upper = score.ceil() as i32;
+    let near = score.round() as i32;
+    grade.extend([lower, upper, near]);
+
+    // Dale_Chall_Readability_Score
+    let score = dale_chall_readability_score(text);
+    let lower = score.floor() as i32;
+    let upper = score.ceil() as i32;
+    let near = score.round() as i32;
+    grade.extend([lower, upper, near]);
+
+    // Linsear_Write_Formula
+    let score = linsear_write_formula(text);
+    let lower = score.floor() as i32;
+    let upper = score.ceil() as i32;
+    let near = score.round() as i32;
+    grade.extend([lower, upper, near]);
+
+    // Appending Gunning Fog Index
+    // TODO: reconsider defaults being py signature only?
+    let score = gunning_fog(text, 3);
+    let lower = score.floor() as i32;
+    let upper = score.ceil() as i32;
+    let near = score.round() as i32;
+    grade.extend([lower, upper, near]);
+
+    // Finding the Readability Consensus based on all the above tests
+    let final_grade = grade
+        .iter()
+        .fold(HashMap::new(), |mut m, &g| {
+            *m.entry(g).or_insert(0) += 1;
+            m
+        })
+        .into_iter()
+        .max_by_key(|&(_, c)| c)
+        .map(|(g, _)| g).unwrap();
+    final_grade
+}
