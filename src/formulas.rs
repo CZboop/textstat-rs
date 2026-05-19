@@ -116,6 +116,17 @@ pub(crate) fn dale_chall_readability_score(text: &str) -> f64 {
     }
 }
 
+pub(crate) fn gunning_fog(text: &str, syllable_threshold: usize) -> f64 {
+    let difficult_words = count_difficult_words(text, syllable_threshold);
+    let total_words = word_count(text);
+    if total_words == 0 {
+        return 0.0;
+    } else {
+        let per_difficult_words = 100.0 * difficult_words as f64 / total_words as f64;
+        0.4 * (words_per_sentence(text) as f64 + per_difficult_words)
+    }
+}
+
 // TODO: relies on other metrics not yet implemented
 // pub(crate) fn text_standard(text: &str) -> f64 {
 //     0.0

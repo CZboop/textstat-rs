@@ -74,3 +74,9 @@ def test_dale_chall_parity(text):
     assert textstat_rs.dale_chall_readability_score(text) == pytest.approx(
         textstat.dale_chall_readability_score(text), abs=0.5
     )
+
+@pytest.mark.parametrize("text", SAMPLE_TEXTS)
+def test_gunning_fog_parity(text):
+    assert textstat_rs.gunning_fog(text) == pytest.approx(
+        textstat.gunning_fog(text), abs=6.0
+    )

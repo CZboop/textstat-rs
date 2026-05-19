@@ -56,6 +56,12 @@ mod textstat_rs {
     fn dale_chall_readability_score(text: &str) -> PyResult<f64> {
         Ok(formulas::dale_chall_readability_score(text))
     }
+
+    #[pyfunction]
+    #[pyo3(signature = (text, syllable_threshold=3))]
+    fn gunning_fog(text: &str, syllable_threshold: usize) -> PyResult<f64> {
+        Ok(formulas::gunning_fog(text, syllable_threshold))
+    }
 }
 
 mod data;
