@@ -1,6 +1,52 @@
 import pytest
+import textstat
 import textstat_rs
 
+SAMPLE_TEXTS = [
+    "The cat sat on the mat. It was a sunny day.",
+    "Photosynthesis is the process by which plants convert sunlight into chemical energy stored in glucose molecules.",
+    "Hello world. This is a simple test sentence for readability scoring.",
+    "Mitochondria is the powerhouse of the cell.",
+]
 
-def test_sum_as_string():
-    assert textstat_rs.sum_as_string(1, 1) == "2"
+
+# Parity tests: Compare original and ported outputs for same inputs
+
+# NOTE: slight drift expected until/without porting syllable, sentence and word tokenisation. Hence approx
+# metrics most impacted so far (syllable based) - flesch_reading_ease, flesch_kincaid_grade, linsear_write_formula
+# should tune/update abs value
+
+
+@pytest.mark.parametrize("text", SAMPLE_TEXTS)
+def test_flesch_reading_ease_parity(text):
+    assert textstat_rs.flesch_reading_ease(text) == pytest.approx(
+        textstat.flesch_reading_ease(text), abs=15.0
+    )
+
+
+@pytest.mark.parametrize("text", SAMPLE_TEXTS)
+def test_flesch_kincaid_grade_parity(text):
+    assert textstat_rs.flesch_kincaid_grade(text) == pytest.approx(
+        textstat.flesch_kincaid_grade(text), abs=4.0
+    )
+
+
+@pytest.mark.parametrize("text", SAMPLE_TEXTS)
+def test_automated_readability_index_parity(text):
+    assert textstat_rs.automated_readability_index(text) == pytest.approx(
+        textstat.automated_readability_index(text), abs=4.0
+    )
+
+
+@pytest.mark.parametrize("text", SAMPLE_TEXTS)
+def test_coleman_liau_index_parity(text):
+    assert textstat_rs.coleman_liau_index(text) == pytest.approx(
+        textstat.coleman_liau_index(text), abs=4.0
+    )
+
+
+@pytest.mark.parametrize("text", SAMPLE_TEXTS)
+def test_linsear_write_formula_parity(text):
+    assert textstat_rs.linsear_write_formula(text) == pytest.approx(
+        textstat.linsear_write_formula(text), abs=4.0
+    )

@@ -10,4 +10,3 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = "0.28.3"
-rust_readability = "0.2.0"
