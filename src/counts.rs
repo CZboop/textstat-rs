@@ -21,3 +21,16 @@ pub(crate) fn miniword_count(text: &str) -> usize {
 pub(crate) fn sentence_count(text: &str) -> usize {
     sentence_list(text).len().max(1)
 }
+
+pub(crate) fn word_count(text: &str) -> usize {
+    word_list(text).len().max(1)
+}
+
+pub(crate) fn words_per_sentence(text: &str) -> usize {
+    word_list(text).len() / sentence_count(text)
+}
+
+pub(crate) fn count_difficult_words(text: &str, syllable_threshold: usize) -> usize {
+    let easy_words = crate::data::easy_words();
+    word_list(text).iter().filter(|w| {let lower = w.to_lowercase(); !easy_words.contains(lower.as_str()) && count_syllables(&lower) > syllable_threshold}).count()
+}

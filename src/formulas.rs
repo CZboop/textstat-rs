@@ -1,4 +1,7 @@
-use crate::counts::{char_count, letter_count, miniword_count, sentence_count, syllable_count};
+use crate::counts::{
+    char_count, count_difficult_words, letter_count, miniword_count, sentence_count,
+    syllable_count, word_count, words_per_sentence,
+};
 use crate::syllable::count_syllables;
 use crate::tokenize::{sentence_list, word_list};
 
@@ -84,6 +87,17 @@ pub(crate) fn mcalpine_eflaw(text: &str) -> f64 {
     let n_miniwords = miniword_count(text);
 
     (n_words + n_miniwords) as f64 / n_sentences as f64
+}
+
+pub(crate) fn spache_readability(text: &str) -> f64 {
+    let num_total_words = word_count(text);
+    let asl = words_per_sentence(text);
+    if num_total_words == 0 {
+        return 0.0;
+    } else {
+        let pdw = 100 * count_difficult_words(text, 2) / num_total_words;
+        (0.141 * asl as f64) + (0.086 * pdw as f64) + 0.839
+    }
 }
 
 // TODO: relies on other metrics not yet implemented

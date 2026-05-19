@@ -46,4 +46,11 @@ mod textstat_rs {
     fn mcalpine_eflaw(text: &str) -> PyResult<f64> {
         Ok(formulas::mcalpine_eflaw(text))
     }
+
+    #[pyfunction]
+    fn spache_readability(text: &str) -> PyResult<f64> {
+        Ok(formulas::spache_readability(text))
+    }
 }
+
+mod data;
