@@ -35,4 +35,10 @@ mod textstat_rs {
     fn linsear_write_formula(text: &str) -> PyResult<f64> {
         Ok(formulas::linsear_write_formula(text))
     }
+
+    #[pyfunction]
+    #[pyo3(signature = (text, ms_per_char=14.69))]
+    fn reading_time(text: &str, ms_per_char: f64) -> PyResult<f64> {
+        Ok(formulas::reading_time(text, ms_per_char))
+    }
 }

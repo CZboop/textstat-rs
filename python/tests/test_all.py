@@ -50,3 +50,9 @@ def test_linsear_write_formula_parity(text):
     assert textstat_rs.linsear_write_formula(text) == pytest.approx(
         textstat.linsear_write_formula(text), abs=4.0
     )
+
+@pytest.mark.parametrize("text", SAMPLE_TEXTS)
+def test_reading_time_parity(text):
+    assert textstat_rs.reading_time(text) == pytest.approx(
+        textstat.reading_time(text), abs=4.0
+    )

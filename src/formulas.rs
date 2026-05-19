@@ -71,3 +71,14 @@ pub(crate) fn linsear_write_formula(text: &str) -> f64 {
     }
     number / 2.0
 }
+
+pub(crate) fn reading_time(text: &str, ms_per_char: f64) -> f64 {
+    // TODO: char_count ignore_spaces boolean arg
+    let time: f64 = ms_per_char * char_count(text) as f64 / 1000.0;
+    time
+}
+
+// TODO: relies on other metrics not yet implemented
+// pub(crate) fn text_standard(text: &str) -> f64 {
+//     0.0
+// }
