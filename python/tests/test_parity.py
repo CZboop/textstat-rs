@@ -1,6 +1,7 @@
 import pytest
 import textstat
 import textstat_rs
+import re
 
 SAMPLE_TEXTS = [
     "The cat sat on the mat. It was a sunny day.",
@@ -93,9 +94,16 @@ def test_smog_index_parity(text):
         textstat.smog_index(text), abs=2.0
     )
 
-# # TODO: different format needed in lib, string and multiple grades rather than numeric
-# @pytest.mark.parametrize("text", SAMPLE_TEXTS)
-# def test_text_standard_parity(text):
-#     assert textstat_rs.text_standard(text) == pytest.approx(
-#         textstat.text_standard(text), abs=2.0
-#     )
+
+@pytest.mark.parametrize("text", SAMPLE_TEXTS)
+def test_text_standard_parity(text):
+    ts_grade_lower, ts_grade_upper = [
+        re.search("\\d+", i).group(0)
+        for i in textstat.text_standard(text).split(" and ")
+    ]
+    rs_grade_lower, rs_grade_upper = [
+        re.search("\\d+", i).group(0)
+        for i in textstat.text_standard(text).split(" and ")
+    ]
+    assert ts_grade_upper == pytest.approx(rs_grade_upper, abs=1.0)
+    assert ts_grade_lower == pytest.approx(rs_grade_lower, abs=1.0)

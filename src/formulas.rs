@@ -5,6 +5,7 @@ use crate::counts::{
 use crate::syllable::count_syllables;
 use crate::tokenize::{sentence_list, word_list};
 use std::collections::HashMap;
+use std::cmp;
 
 pub(crate) fn flesch_reading_ease(text: &str) -> f64 {
     let words = word_list(text).len() as f64;
@@ -134,7 +135,8 @@ pub(crate) fn smog_index(text: &str) -> f64 {
     (1.043 * (30.0 * (poly_syllab / sentences)).sqrt()) + 3.1291
 }
 
-pub(crate) fn text_standard(text: &str) -> i32 {
+pub(crate) fn text_standard(text: &str) -> String {
+    // TODO: potentially add float_value boolean arg
     let mut grade: Vec<i32> = Vec::new(); // TODO: add with_capacity once know num items? should be constant
     // TODO: instead of pushing as you go, just create at the end?
 
@@ -211,7 +213,7 @@ pub(crate) fn text_standard(text: &str) -> i32 {
     grade.extend([lower, upper, near]);
 
     // Finding the Readability Consensus based on all the above tests
-    let final_grade = grade
+    let final_grade_numeric = grade
         .iter()
         .fold(HashMap::new(), |mut m, &g| {
             *m.entry(g).or_insert(0) += 1;
@@ -220,5 +222,31 @@ pub(crate) fn text_standard(text: &str) -> i32 {
         .into_iter()
         .max_by_key(|&(_, c)| c)
         .map(|(g, _)| g).unwrap();
-    final_grade
+    let clamped_grade = final_grade_numeric.clamp(1, cmp::min(final_grade_numeric, 18));
+    let lower_score = clamped_grade - 1;
+    let upper_score = lower_score + 1;
+
+    let lower_suffix = ordinal_suffix(lower_score);
+    let upper_suffix = ordinal_suffix(upper_score);
+
+    format!("{lower_score}{lower_suffix} and {upper_score}{upper_suffix} grade")
+}
+
+fn ordinal_suffix(number: i32) -> &'static str {
+    let ordinal_value = match number % 10 {
+        1 => "st",
+        2 => "nd",
+        3 => "rd",
+        _ => "th",
+    };
+    let teen_value = match number % 100 {
+        11 => "th",
+        12 => "th",
+        13 => "th",
+        _ => "none",
+    };
+    if teen_value == "none" {
+        return ordinal_value;
+    }
+    ordinal_value
 }

@@ -69,7 +69,7 @@ mod textstat_rs {
     }
 
     #[pyfunction]
-    fn text_standard(text: &str) -> PyResult<i32> {
+    fn text_standard(text: &str) -> PyResult<String> {
         Ok(formulas::text_standard(text))
     }
 }
