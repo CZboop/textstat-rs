@@ -1,31 +1,45 @@
-pub(crate) fn count_syllables(word: &str) -> usize {
-    let lower = word.to_lowercase();
-    let chars: Vec<char> = lower.chars().filter(|c| c.is_ascii_alphabetic()).collect();
+use hyphenation::{Hyphenator, Language, Load, Standard};
+use std::collections::HashMap;
+use std::sync::LazyLock;
 
-    if chars.is_empty() {
+static EN_US: LazyLock<Standard> =
+    LazyLock::new(|| Standard::from_embedded(Language::EnglishUS).unwrap());
+
+static CMU_RAW: &str = include_str!("data/cmudict.txt");
+
+static CMU: LazyLock<HashMap<String, usize>> = LazyLock::new(|| {
+    CMU_RAW
+        .lines()
+        .filter(|line| !line.is_empty())
+        .filter_map(|line| {
+            // single space separator, lowercase words already
+            let (word, phones) = line.split_once(' ')?;
+            if word.contains('(') {
+                return None;
+            }
+            let syllables = phones
+                .split_whitespace()
+                .filter(|p| p.chars().last().is_some_and(|c| c.is_ascii_digit()))
+                .count();
+            Some((word.to_string(), syllables))
+        })
+        .collect()
+});
+
+pub(crate) fn count_syllables(word: &str) -> usize {
+    let lower: String = word
+        .chars()
+        .filter(|c| c.is_alphabetic())
+        .collect::<String>()
+        .to_lowercase();
+
+    if lower.is_empty() {
         return 0;
     }
-
-    let is_vowel = |c: char| matches!(c, 'a' | 'e' | 'i' | 'o' | 'u' | 'y');
-
-    let mut count = 0usize;
-    let mut prev_vowel = false;
-    for &c in &chars {
-        let v = is_vowel(c);
-        if v && !prev_vowel {
-            count += 1;
-        }
-        prev_vowel = v;
+    if let Some(&n) = CMU.get(&lower) {
+        return n.max(1);
     }
-
-    // silent trailing 'e' — except for the "-le" ending after a consonant (e.g. "table").
-    let n = chars.len();
-    if n >= 2 && chars[n - 1] == 'e' {
-        let is_consonant_le = n >= 3 && chars[n - 2] == 'l' && !is_vowel(chars[n - 3]);
-        if !is_consonant_le && count > 1 {
-            count -= 1;
-        }
-    }
-
-    count.max(1)
+    
+    // out of vocab fallback, typographic breaks + 1, to match pyphen
+    (EN_US.hyphenate(&lower).breaks.len() + 1).max(1)
 }

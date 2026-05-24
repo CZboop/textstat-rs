@@ -1,6 +1,6 @@
 use crate::syllable::count_syllables;
-use crate::tokenize::word_list;
 use crate::tokenize::sentence_list;
+use crate::tokenize::word_list;
 
 pub(crate) fn char_count(text: &str) -> usize {
     text.chars().filter(|c| !c.is_whitespace()).count()
@@ -15,7 +15,10 @@ pub(crate) fn syllable_count(text: &str) -> usize {
 }
 
 pub(crate) fn miniword_count(text: &str) -> usize {
-    word_list(text).iter().filter(|w| w.chars().count() <= 3).count()
+    word_list(text)
+        .iter()
+        .filter(|w| w.chars().count() <= 3)
+        .count()
 }
 
 pub(crate) fn sentence_count(text: &str) -> usize {
@@ -32,9 +35,19 @@ pub(crate) fn words_per_sentence(text: &str) -> f64 {
 
 pub(crate) fn count_difficult_words(text: &str, syllable_threshold: usize) -> usize {
     let easy_words = crate::data::easy_words();
-    word_list(text).iter().filter(|w| {let lower = w.to_lowercase(); !easy_words.contains(lower.as_str()) && count_syllables(&lower) > syllable_threshold}).count()
+    word_list(text)
+        .iter()
+        .filter(|w| {
+            let lower = w.to_lowercase();
+            !easy_words.contains(lower.as_str()) && count_syllables(&lower) >= syllable_threshold
+        })
+        .count()
 }
 
 pub(crate) fn polysyllable_word_count(text: &str) -> usize {
-    word_list(text).iter().map(|w| count_syllables(w)).filter(|c| *c >= 3).count()
+    word_list(text)
+        .iter()
+        .map(|w| count_syllables(w))
+        .filter(|c| *c >= 3)
+        .count()
 }
