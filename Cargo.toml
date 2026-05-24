@@ -9,6 +9,7 @@ name = "textstat_rs"
 crate-type = ["cdylib"]
 
 [dependencies]
+fancy-regex = "0.18.0"
 hyphenation = { version = "0.8.4", features = ["embed_en-us"] }
 pyo3 = "0.28.3"
 regex = "1.12.3"

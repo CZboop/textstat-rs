@@ -17,14 +17,14 @@ SAMPLE_TEXTS = [
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_flesch_reading_ease_parity(text):
     assert textstat_rs.flesch_reading_ease(text) == pytest.approx(
-        textstat.flesch_reading_ease(text), abs=6.0
+        textstat.flesch_reading_ease(text), abs=5.59
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_flesch_kincaid_grade_parity(text):
     assert textstat_rs.flesch_kincaid_grade(text) == pytest.approx(
-        textstat.flesch_kincaid_grade(text), abs=2.2
+        textstat.flesch_kincaid_grade(text), abs=2.15
     )
 
 

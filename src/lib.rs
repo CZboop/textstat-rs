@@ -4,6 +4,7 @@ mod counts;
 mod formulas;
 mod syllable;
 mod tokenize;
+mod transform;
 
 /// A Python module implemented in Rust.
 #[pymodule]
