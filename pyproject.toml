@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "textstat-rs"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -21,3 +21,8 @@ tests = [
 ]
 [tool.maturin]
 python-source = "python"
+
+[dependency-groups]
+dev = [
+    "datasets==3.6.0",
+]

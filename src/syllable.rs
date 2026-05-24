@@ -28,9 +28,6 @@ static CMU: LazyLock<HashMap<String, usize>> = LazyLock::new(|| {
 
 pub(crate) fn count_syllables(word: &str) -> usize {
     let lower: String = word
-        .chars()
-        .filter(|c| c.is_alphabetic())
-        .collect::<String>()
         .to_lowercase();
 
     if lower.is_empty() {
@@ -39,7 +36,7 @@ pub(crate) fn count_syllables(word: &str) -> usize {
     if let Some(&n) = CMU.get(&lower) {
         return n.max(1);
     }
-    
+
     // out of vocab fallback, typographic breaks + 1, to match pyphen
     (EN_US.hyphenate(&lower).breaks.len() + 1).max(1)
 }
