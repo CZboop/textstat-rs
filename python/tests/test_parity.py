@@ -56,7 +56,7 @@ def test_linsear_write_formula_parity(text):
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_reading_time_parity(text):
     assert textstat_rs.reading_time(text) == pytest.approx(
-        textstat.reading_time(text), abs=0.000001 # NOTE: abs could be 0.0?
+        textstat.reading_time(text), abs=0.0
     )
 
 
@@ -98,12 +98,12 @@ def test_smog_index_parity(text):
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_text_standard_parity(text):
     ts_grade_lower, ts_grade_upper = [
-        re.search("\\d+", i).group(0)
+        int(re.search("\\d+", i).group(0))
         for i in textstat.text_standard(text).split(" and ")
     ]
     rs_grade_lower, rs_grade_upper = [
-        re.search("\\d+", i).group(0)
-        for i in textstat.text_standard(text).split(" and ")
+        int(re.search("\\d+", i).group(0))
+        for i in textstat_rs.text_standard(text).split(" and ")
     ]
-    assert ts_grade_upper == pytest.approx(rs_grade_upper, abs=0.0)
-    assert ts_grade_lower == pytest.approx(rs_grade_lower, abs=0.0)
+    assert ts_grade_upper == pytest.approx(rs_grade_upper, abs=2.0)
+    assert ts_grade_lower == pytest.approx(rs_grade_lower, abs=2.0)

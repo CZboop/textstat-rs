@@ -4,7 +4,6 @@ use crate::counts::{
 };
 use crate::syllable::count_syllables;
 use crate::tokenize::{sentence_list, word_list};
-use std::cmp;
 use std::collections::HashMap;
 
 pub(crate) fn flesch_reading_ease(text: &str) -> f64 {
@@ -223,7 +222,7 @@ pub(crate) fn text_standard(text: &str) -> String {
         .max_by_key(|&(_, c)| c)
         .map(|(g, _)| g)
         .unwrap();
-    let clamped_grade = final_grade_numeric.clamp(1, cmp::min(final_grade_numeric, 18));
+    let clamped_grade = final_grade_numeric.clamp(1, 18);
     let lower_score = clamped_grade - 1;
     let upper_score = lower_score + 1;
 
