@@ -21,11 +21,15 @@ METRICS = [
     "reading_time",
 ]
 
+
 def _git_sha() -> str:
     try:
-        return subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], text=True).strip()
+        return subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"], text=True
+        ).strip()
     except Exception:
         return "nogit"
+
 
 def main():
     sha = _git_sha()
@@ -40,11 +44,20 @@ def main():
             for m in METRICS:
                 rs = getattr(textstat_rs, m)(text)
                 py = getattr(textstat, m)(text)
-                abs_d = rs - py
-                rel_d = abs_d / py if py else 0.0
-                w.writerow([m, sample_id, f"{rs:.6f}", f"{py:.6f}",
-                            f"{abs_d:.6f}", f"{rel_d:.6f}"])
+                abs_d = abs(rs - py)
+                rel_d = abs(abs_d / py if py else 0.0)
+                w.writerow(
+                    [
+                        m,
+                        sample_id,
+                        f"{rs:.6f}",
+                        f"{py:.6f}",
+                        f"{abs_d:.6f}",
+                        f"{rel_d:.6f}",
+                    ]
+                )
     print(f"wrote {out}")
+
 
 if __name__ == "__main__":
     main()
