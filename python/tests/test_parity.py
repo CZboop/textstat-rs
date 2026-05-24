@@ -66,14 +66,14 @@ def test_mcalpine_eflaw_parity(text):
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_spache_readability_parity(text):
     assert textstat_rs.spache_readability(text) == pytest.approx(
-        textstat.spache_readability(text), abs=0.07
+        textstat.spache_readability(text), abs=0.065
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_dale_chall_parity(text):
     assert textstat_rs.dale_chall_readability_score(text) == pytest.approx(
-        textstat.dale_chall_readability_score(text), abs=0.1
+        textstat.dale_chall_readability_score(text), abs=0.091
     )
 
 
