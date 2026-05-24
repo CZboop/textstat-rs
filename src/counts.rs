@@ -22,7 +22,16 @@ pub(crate) fn miniword_count(text: &str) -> usize {
 }
 
 pub(crate) fn sentence_count(text: &str) -> usize {
-    sentence_list(text).len().max(1)
+    if text.is_empty() {
+        return 0;
+    }
+    // get as a str vec from sentence_list
+    // count if less than 2 words based on word_count
+    sentence_list(text)
+        .into_iter()
+        .filter(|s| word_count(s) > 2)
+        .count()
+        .max(1)
 }
 
 pub(crate) fn word_count(text: &str) -> usize {

@@ -1,3 +1,8 @@
+use regex::Regex;
+use std::sync::LazyLock;
+
+static SENTENCE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\b[^.!?]+[.!?]*").unwrap());
+
 pub(crate) fn word_list(text: &str) -> Vec<&str> {
     let mut words = Vec::new();
     let mut start: Option<usize> = None;
@@ -19,8 +24,5 @@ pub(crate) fn word_list(text: &str) -> Vec<&str> {
 }
 
 pub(crate) fn sentence_list(text: &str) -> Vec<&str> {
-    text.split(|c: char| matches!(c, '.' | '!' | '?'))
-        .map(str::trim)
-        .filter(|s| !s.is_empty())
-        .collect()
+    SENTENCE_RE.find_iter(text).map(|m| m.as_str()).collect()
 }

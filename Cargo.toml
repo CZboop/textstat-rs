@@ -11,3 +11,4 @@ crate-type = ["cdylib"]
 [dependencies]
 hyphenation = { version = "0.8.4", features = ["embed_en-us"] }
 pyo3 = "0.28.3"
+regex = "1.12.3"

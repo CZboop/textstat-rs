@@ -13,10 +13,6 @@ SAMPLE_TEXTS = [
 
 # Parity tests: Compare original and ported outputs for same inputs
 
-# NOTE: slight drift expected until/without porting syllable, sentence and word tokenisation. Hence approx
-# metrics most impacted so far (syllable based) - flesch_reading_ease, flesch_kincaid_grade, linsear_write_formula
-# should tune/update abs value
-
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_flesch_reading_ease_parity(text):
@@ -28,21 +24,21 @@ def test_flesch_reading_ease_parity(text):
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_flesch_kincaid_grade_parity(text):
     assert textstat_rs.flesch_kincaid_grade(text) == pytest.approx(
-        textstat.flesch_kincaid_grade(text), abs=3.0
+        textstat.flesch_kincaid_grade(text), abs=2.2
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_automated_readability_index_parity(text):
     assert textstat_rs.automated_readability_index(text) == pytest.approx(
-        textstat.automated_readability_index(text), abs=3.0
+        textstat.automated_readability_index(text), abs=2.75
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_coleman_liau_index_parity(text):
     assert textstat_rs.coleman_liau_index(text) == pytest.approx(
-        textstat.coleman_liau_index(text), abs=2.5
+        textstat.coleman_liau_index(text), abs=2.29
     )
 
 
@@ -63,35 +59,35 @@ def test_reading_time_parity(text):
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_mcalpine_eflaw_parity(text):
     assert textstat_rs.mcalpine_eflaw(text) == pytest.approx(
-        textstat.mcalpine_eflaw(text), abs=7.0
+        textstat.mcalpine_eflaw(text), abs=0.0
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_spache_readability_parity(text):
     assert textstat_rs.spache_readability(text) == pytest.approx(
-        textstat.spache_readability(text), abs=0.8
+        textstat.spache_readability(text), abs=0.07
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_dale_chall_parity(text):
     assert textstat_rs.dale_chall_readability_score(text) == pytest.approx(
-        textstat.dale_chall_readability_score(text), abs=0.4
+        textstat.dale_chall_readability_score(text), abs=0.1
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_gunning_fog_parity(text):
     assert textstat_rs.gunning_fog(text) == pytest.approx(
-        textstat.gunning_fog(text), abs=2.5
+        textstat.gunning_fog(text), abs=0.0
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_smog_index_parity(text):
     assert textstat_rs.smog_index(text) == pytest.approx(
-        textstat.smog_index(text), abs=1.7
+        textstat.smog_index(text), abs=0.0
     )
 
 
