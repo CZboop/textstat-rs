@@ -21,77 +21,77 @@ SAMPLE_TEXTS = [
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_flesch_reading_ease_parity(text):
     assert textstat_rs.flesch_reading_ease(text) == pytest.approx(
-        textstat.flesch_reading_ease(text), abs=15.0
+        textstat.flesch_reading_ease(text), abs=6.0
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_flesch_kincaid_grade_parity(text):
     assert textstat_rs.flesch_kincaid_grade(text) == pytest.approx(
-        textstat.flesch_kincaid_grade(text), abs=4.0
+        textstat.flesch_kincaid_grade(text), abs=3.0
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_automated_readability_index_parity(text):
     assert textstat_rs.automated_readability_index(text) == pytest.approx(
-        textstat.automated_readability_index(text), abs=4.0
+        textstat.automated_readability_index(text), abs=3.0
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_coleman_liau_index_parity(text):
     assert textstat_rs.coleman_liau_index(text) == pytest.approx(
-        textstat.coleman_liau_index(text), abs=4.0
+        textstat.coleman_liau_index(text), abs=2.5
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_linsear_write_formula_parity(text):
     assert textstat_rs.linsear_write_formula(text) == pytest.approx(
-        textstat.linsear_write_formula(text), abs=4.0
+        textstat.linsear_write_formula(text), abs=3.25
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_reading_time_parity(text):
     assert textstat_rs.reading_time(text) == pytest.approx(
-        textstat.reading_time(text), abs=4.0
+        textstat.reading_time(text), abs=0.000001 # NOTE: abs could be 0.0?
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_mcalpine_eflaw_parity(text):
     assert textstat_rs.mcalpine_eflaw(text) == pytest.approx(
-        textstat.mcalpine_eflaw(text), abs=10.0
+        textstat.mcalpine_eflaw(text), abs=7.0
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_spache_readability_parity(text):
     assert textstat_rs.spache_readability(text) == pytest.approx(
-        textstat.spache_readability(text), abs=2.0
+        textstat.spache_readability(text), abs=0.8
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_dale_chall_parity(text):
     assert textstat_rs.dale_chall_readability_score(text) == pytest.approx(
-        textstat.dale_chall_readability_score(text), abs=0.5
+        textstat.dale_chall_readability_score(text), abs=0.4
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_gunning_fog_parity(text):
     assert textstat_rs.gunning_fog(text) == pytest.approx(
-        textstat.gunning_fog(text), abs=6.0
+        textstat.gunning_fog(text), abs=2.5
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_smog_index_parity(text):
     assert textstat_rs.smog_index(text) == pytest.approx(
-        textstat.smog_index(text), abs=2.0
+        textstat.smog_index(text), abs=1.7
     )
 
 
@@ -105,5 +105,5 @@ def test_text_standard_parity(text):
         re.search("\\d+", i).group(0)
         for i in textstat.text_standard(text).split(" and ")
     ]
-    assert ts_grade_upper == pytest.approx(rs_grade_upper, abs=1.0)
-    assert ts_grade_lower == pytest.approx(rs_grade_lower, abs=1.0)
+    assert ts_grade_upper == pytest.approx(rs_grade_upper, abs=0.0)
+    assert ts_grade_lower == pytest.approx(rs_grade_lower, abs=0.0)
