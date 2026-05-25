@@ -3,7 +3,7 @@ use crate::counts::{
     sentence_count, syllable_count, word_count, words_per_sentence,
 };
 use crate::syllable::count_syllables;
-use crate::tokenize::{sentence_list, word_list};
+use crate::tokenize::word_list;
 use std::collections::HashMap;
 
 pub(crate) fn flesch_reading_ease(text: &str) -> f64 {
@@ -28,14 +28,14 @@ pub(crate) fn flesch_kincaid_grade(text: &str) -> f64 {
 
 pub(crate) fn automated_readability_index(text: &str) -> f64 {
     let words = word_list(text, true, false, false, false, false).len() as f64;
-    let sentences = sentence_list(text).len() as f64;
+    let sentences = sentence_count(text) as f64;
     let chars = char_count(text) as f64;
     4.71 * (chars / words) + 0.5 * (words / sentences) - 21.43
 }
 
 pub(crate) fn coleman_liau_index(text: &str) -> f64 {
     let words = word_list(text, true, false, false, false, false).len() as f64;
-    let sentences = sentence_list(text).len() as f64;
+    let sentences = sentence_count(text) as f64;
     let letters = letter_count(text) as f64;
     let l = letters / words * 100.0;
     let s = sentences / words * 100.0;
@@ -74,7 +74,7 @@ pub(crate) fn linsear_write_formula(text: &str) -> f64 {
         }
     }
 
-    let sentences = sentence_list(truncated).len() as f64;
+    let sentences = sentence_count(text) as f64;
     let mut number = (easy + hard * 3) as f64 / sentences;
     if number <= 20.0 {
         number -= 2.0;

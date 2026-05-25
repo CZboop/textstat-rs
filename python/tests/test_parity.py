@@ -31,21 +31,21 @@ def test_flesch_kincaid_grade_parity(text):
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_automated_readability_index_parity(text):
     assert textstat_rs.automated_readability_index(text) == pytest.approx(
-        textstat.automated_readability_index(text), abs=2.75
+        textstat.automated_readability_index(text), abs=0.0
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_coleman_liau_index_parity(text):
     assert textstat_rs.coleman_liau_index(text) == pytest.approx(
-        textstat.coleman_liau_index(text), abs=2.29
+        textstat.coleman_liau_index(text), abs=0.48
     )
 
 
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_linsear_write_formula_parity(text):
     assert textstat_rs.linsear_write_formula(text) == pytest.approx(
-        textstat.linsear_write_formula(text), abs=3.25
+        textstat.linsear_write_formula(text), abs=0.0
     )
 
 
