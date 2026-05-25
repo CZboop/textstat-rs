@@ -8,8 +8,14 @@ use std::collections::HashMap;
 
 pub(crate) fn flesch_reading_ease(text: &str) -> f64 {
     let words = word_list(text, true, false, false, false, false).len() as f64;
-    let sentences = sentence_list(text).len() as f64;
+    let sentences = sentence_count(text) as f64;
     let syllables = syllable_count(text) as f64;
+    if words == 0.0 {
+        return 0.0;
+    }
+    if sentences == 0.0 {
+        return 0.0;
+    }
     206.835 - 1.015 * (words / sentences) - 84.6 * (syllables / words)
 }
 

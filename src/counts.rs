@@ -34,13 +34,11 @@ pub(crate) fn sentence_count(text: &str) -> usize {
         .into_iter()
         .filter(|s| word_count(s) > 2)
         .count()
-        .max(1)
 }
 
 pub(crate) fn word_count(text: &str) -> usize {
     word_list(text, true, false, false, false, false)
         .len()
-        .max(1)
 }
 
 pub(crate) fn words_per_sentence(text: &str) -> f64 {

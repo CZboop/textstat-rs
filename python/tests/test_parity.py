@@ -17,7 +17,7 @@ SAMPLE_TEXTS = [
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_flesch_reading_ease_parity(text):
     assert textstat_rs.flesch_reading_ease(text) == pytest.approx(
-        textstat.flesch_reading_ease(text), abs=5.59
+        textstat.flesch_reading_ease(text), abs=0.0
     )
 
 

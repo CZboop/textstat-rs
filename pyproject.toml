@@ -18,11 +18,8 @@ dependencies = [
 [project.optional-dependencies]
 tests = [
     "pytest",
+    "datasets==3.6.0",
 ]
 [tool.maturin]
 python-source = "python"
 
-[dependency-groups]
-dev = [
-    "datasets==3.6.0",
-]
