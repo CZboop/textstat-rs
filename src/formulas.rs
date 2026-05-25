@@ -21,7 +21,7 @@ pub(crate) fn flesch_reading_ease(text: &str) -> f64 {
 
 pub(crate) fn flesch_kincaid_grade(text: &str) -> f64 {
     let words = word_list(text, true, false, false, false, false).len() as f64;
-    let sentences = sentence_list(text).len() as f64;
+    let sentences = sentence_count(text) as f64;
     let syllables = syllable_count(text) as f64;
     0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59
 }

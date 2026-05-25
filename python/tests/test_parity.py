@@ -24,7 +24,7 @@ def test_flesch_reading_ease_parity(text):
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_flesch_kincaid_grade_parity(text):
     assert textstat_rs.flesch_kincaid_grade(text) == pytest.approx(
-        textstat.flesch_kincaid_grade(text), abs=2.15
+        textstat.flesch_kincaid_grade(text), abs=0.0
     )
 
 
