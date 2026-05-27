@@ -1,6 +1,6 @@
 use crate::counts::{
-    char_count, count_difficult_words, letter_count, miniword_count, polysyllable_word_count,
-    sentence_count, syllable_count, word_count, words_per_sentence,
+    char_count, count_difficult_words, letters_per_word, miniword_count, polysyllable_word_count,
+    sentence_count, sentences_per_word, syllable_count, word_count, words_per_sentence,
 };
 use crate::syllable::count_syllables;
 use crate::tokenize::word_list;
@@ -35,12 +35,12 @@ pub(crate) fn automated_readability_index(text: &str) -> f64 {
 }
 
 pub(crate) fn coleman_liau_index(text: &str) -> f64 {
-    let words = word_list(text, true, false, false, false, false).len() as f64;
-    let sentences = sentence_count(text) as f64;
-    let letters = letter_count(text) as f64;
-    let l = letters / words * 100.0;
-    let s = sentences / words * 100.0;
-    0.0588 * l - 0.296 * s - 15.8
+    let sentences = sentences_per_word(text) * 100 as f64;
+    let letters = letters_per_word(text) * 100 as f64;
+    if letters == 0.0 || sentences == 0.0 {
+        return 0.0;
+    }
+    0.0588 * letters - 0.296 * sentences - 15.8
 }
 
 pub(crate) fn linsear_write_formula(text: &str, strict_lower: bool, strict_upper: bool) -> f64 {
@@ -71,8 +71,7 @@ pub(crate) fn linsear_write_formula(text: &str, strict_lower: bool, strict_upper
         let n_syll = count_syllables(word);
         if n_syll >= 3 {
             difficult_word += 1;
-        }
-        else {
+        } else {
             if n_syll > 0 {
                 easy_word += 1;
             }

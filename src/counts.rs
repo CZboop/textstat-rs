@@ -1,13 +1,12 @@
 use crate::syllable::count_syllables;
 use crate::tokenize::sentence_list;
 use crate::tokenize::word_list;
+use crate::transform::remove_punctuation;
+
+use regex::Regex;
 
 pub(crate) fn char_count(text: &str) -> usize {
     text.chars().filter(|c| !c.is_whitespace()).count()
-}
-
-pub(crate) fn letter_count(text: &str) -> usize {
-    text.chars().filter(|c| c.is_alphabetic()).count()
 }
 
 pub(crate) fn syllable_count(text: &str) -> usize {
@@ -37,8 +36,7 @@ pub(crate) fn sentence_count(text: &str) -> usize {
 }
 
 pub(crate) fn word_count(text: &str) -> usize {
-    word_list(text, true, false, false, false, false)
-        .len()
+    word_list(text, true, false, false, false, false).len()
 }
 
 pub(crate) fn words_per_sentence(text: &str) -> f64 {
@@ -62,4 +60,28 @@ pub(crate) fn polysyllable_word_count(text: &str) -> usize {
         .map(|w| count_syllables(w))
         .filter(|c| *c >= 3)
         .count()
+}
+
+pub(crate) fn count_letters(text: &str) -> usize {
+    let re = Regex::new(r"\s").unwrap();
+    let text_minus_whitespace = re.replace_all(text, "");
+    remove_punctuation(&text_minus_whitespace, true).len()
+}
+
+pub(crate) fn letters_per_word(text: &str) -> f64 {
+    let letters = count_letters(text) as f64;
+    let words = word_count(text) as f64;
+    if words == 0.0 {
+        return 0.0;
+    }
+    letters / words
+}
+
+pub(crate) fn sentences_per_word(text: &str) -> f64 {
+    let sentences = sentence_count(text) as f64;
+    let words = word_count(text) as f64;
+    if words == 0.0 {
+        return 0.0;
+    }
+    sentences / words
 }

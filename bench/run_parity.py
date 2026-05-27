@@ -6,7 +6,6 @@ import textstat
 import textstat_rs
 
 from bench.corpora import wikipedia_samples
-import ftfy
 
 METRICS = [
     "flesch_reading_ease",
