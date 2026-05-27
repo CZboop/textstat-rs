@@ -4,6 +4,7 @@ use crate::counts::{
 };
 use crate::syllable::count_syllables;
 use crate::tokenize::word_list;
+use crate::transform::remove_punctuation;
 use std::collections::HashMap;
 
 pub(crate) fn flesch_reading_ease(text: &str) -> f64 {
@@ -42,40 +43,47 @@ pub(crate) fn coleman_liau_index(text: &str) -> f64 {
     0.0588 * l - 0.296 * s - 15.8
 }
 
-pub(crate) fn linsear_write_formula(text: &str) -> f64 {
-    // textstat scores only the first 100 whitespace-separated tokens — truncate
-    // the original text to that prefix so sentence boundaries are preserved.
-    let mut token_count = 0usize;
-    let mut in_token = false;
-    let mut end_byte = text.len();
-    for (i, c) in text.char_indices() {
-        if c.is_whitespace() {
-            if in_token {
-                token_count += 1;
-                in_token = false;
-                if token_count >= 100 {
-                    end_byte = i;
-                    break;
-                }
+pub(crate) fn linsear_write_formula(text: &str, strict_lower: bool, strict_upper: bool) -> f64 {
+    let text_list = word_list(text, false, false, false, false, false);
+
+    let mut words_list = Vec::new();
+    let mut i_text = 0;
+    let mut word;
+    if strict_upper && text_list.len() > 100 {
+        while (i_text < text_list.len()) && (words_list.len() < 100) {
+            word = remove_punctuation(&text_list[i_text], false);
+            i_text += 1;
+            if word.len() > 0 {
+                words_list.push(word)
             }
-        } else {
-            in_token = true;
         }
+    } else {
+        words_list = word_list(text, true, false, false, false, false);
+        i_text = text_list.len();
     }
-    let truncated = &text[..end_byte];
-
-    let mut easy = 0usize;
-    let mut hard = 0usize;
-    for w in word_list(truncated, true, false, false, false, false) {
-        if count_syllables(&w) < 3 {
-            easy += 1;
-        } else {
-            hard += 1;
-        }
+    if strict_lower && (words_list.len() < 100) {
+        return 0.0;
     }
 
-    let sentences = sentence_count(text) as f64;
-    let mut number = (easy + hard * 3) as f64 / sentences;
+    let mut easy_word = 0;
+    let mut difficult_word = 0;
+    for word in words_list.iter() {
+        let n_syll = count_syllables(word);
+        if n_syll >= 3 {
+            difficult_word += 1;
+        }
+        else {
+            if n_syll > 0 {
+                easy_word += 1;
+            }
+        }
+    }
+    let text = text_list[..i_text].join(" ");
+    let text_sentences = sentence_count(&text);
+    if text_sentences == 0 {
+        return 0.0;
+    }
+    let mut number = (easy_word * 1 + difficult_word * 3) as f64 / text_sentences as f64;
     if number <= 20.0 {
         number -= 2.0;
     }
@@ -203,7 +211,8 @@ pub(crate) fn text_standard(text: &str) -> String {
     grade.extend([lower, upper, near]);
 
     // Linsear_Write_Formula
-    let score = linsear_write_formula(text);
+    // TODO: confirm bools
+    let score = linsear_write_formula(text, false, true);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
     let near = score.round() as i32;

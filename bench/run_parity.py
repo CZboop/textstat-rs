@@ -6,6 +6,7 @@ import textstat
 import textstat_rs
 
 from bench.corpora import wikipedia_samples
+import ftfy
 
 METRICS = [
     "flesch_reading_ease",
@@ -37,9 +38,9 @@ def main():
     out.parent.mkdir(exist_ok=True)
     samples = wikipedia_samples(1000)
 
-    with out.open("w", newline="") as f:
+    with out.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["metric", "sample_id", "rs", "py", "abs_delta", "rel_delta"])
+        w.writerow(["metric", "sample_id", "rs", "py", "abs_delta", "rel_delta", "text"])
         for sample_id, text in samples:
             for m in METRICS:
                 rs = getattr(textstat_rs, m)(text)
@@ -54,6 +55,7 @@ def main():
                         f"{py:.6f}",
                         f"{abs_d:.6f}",
                         f"{rel_d:.6f}",
+                        text,
                     ]
                 )
     print(f"wrote {out}")
