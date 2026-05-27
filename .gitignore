@@ -75,4 +75,5 @@ docs/_build/
 notes.txt
 TODO.md
 results/*.csv
+results/*.md
 _cache/
