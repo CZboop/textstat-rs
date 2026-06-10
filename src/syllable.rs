@@ -8,27 +8,32 @@ static EN_US: LazyLock<Standard> =
 static CMU_RAW: &str = include_str!("data/cmudict.txt");
 
 static CMU: LazyLock<HashMap<String, usize>> = LazyLock::new(|| {
-    CMU_RAW
-        .lines()
-        .filter(|line| !line.is_empty())
-        .filter_map(|line| {
-            // single space separator, lowercase words already
-            let (word, phones) = line.split_once(' ')?;
-            if word.contains('(') {
-                return None;
-            }
-            let syllables = phones
-                .split_whitespace()
-                .filter(|p| p.chars().last().is_some_and(|c| c.is_ascii_digit()))
-                .count();
-            Some((word.to_string(), syllables))
-        })
-        .collect()
+    let mut map: HashMap<String, usize> = HashMap::new();
+    for line in CMU_RAW.lines() {
+        if line.is_empty() {
+            continue;
+        }
+        let mut parts = line.split_whitespace();
+        let Some(word) = parts.next() else { continue };
+        let Some(variant) = parts.next() else {
+            continue;
+        };
+        if variant != "1" {
+            continue;
+        }
+        let syllables = parts
+            .filter(|p| p.chars().last().is_some_and(|c| c.is_ascii_digit()))
+            .count();
+        map.insert(word.to_ascii_lowercase(), syllables);
+    }
+    map
 });
 
-pub(crate) fn count_syllables(word: &str) -> usize {
-    let lower: String = word
-        .to_lowercase();
+pub(crate) fn count_syllables(text: &str) -> usize {
+    if text.len() == 0 {
+        return 0;
+    }
+    let lower: String = text.to_lowercase();
 
     if lower.is_empty() {
         return 0;

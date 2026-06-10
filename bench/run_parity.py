@@ -117,4 +117,6 @@ def main():
 
 
 if __name__ == "__main__":
+    import nltk
+    print(nltk.data.find("corpora/cmudict/cmudict"))
     main()

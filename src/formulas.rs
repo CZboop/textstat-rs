@@ -8,16 +8,14 @@ use crate::transform::remove_punctuation;
 use std::collections::HashMap;
 
 pub(crate) fn flesch_reading_ease(text: &str) -> f64 {
-    let words = word_list(text, true, false, false, false, false).len() as f64;
-    let sentences = sentence_count(text) as f64;
+    let words = word_count(text) as f64;
     let syllables = syllable_count(text) as f64;
+    let sentence_length = words_per_sentence(text);
+    let mut syllables_per_word = syllables / words;
     if words == 0.0 {
-        return 0.0;
+        syllables_per_word = 0.0;
     }
-    if sentences == 0.0 {
-        return 0.0;
-    }
-    206.835 - 1.015 * (words / sentences) - 84.6 * (syllables / words)
+    206.835 - 1.015 * sentence_length - 84.6 * syllables_per_word
 }
 
 pub(crate) fn flesch_kincaid_grade(text: &str) -> f64 {
