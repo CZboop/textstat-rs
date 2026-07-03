@@ -65,7 +65,7 @@ pub(crate) fn polysyllable_word_count(text: &str) -> usize {
 pub(crate) fn count_letters(text: &str) -> usize {
     let re = Regex::new(r"\s").unwrap();
     let text_minus_whitespace = re.replace_all(text, "");
-    remove_punctuation(&text_minus_whitespace, true).len()
+    remove_punctuation(&text_minus_whitespace, true).chars().count()
 }
 
 pub(crate) fn letters_per_word(text: &str) -> f64 {
