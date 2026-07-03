@@ -38,7 +38,7 @@ def test_automated_readability_index_parity(text):
 @pytest.mark.parametrize("text", SAMPLE_TEXTS)
 def test_coleman_liau_index_parity(text):
     assert textstat_rs.coleman_liau_index(text) == pytest.approx(
-        textstat.coleman_liau_index(text), abs=0.48
+        textstat.coleman_liau_index(text), abs=0.0
     )
 
 

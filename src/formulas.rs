@@ -38,7 +38,7 @@ pub(crate) fn coleman_liau_index(text: &str) -> f64 {
     if letters == 0.0 || sentences == 0.0 {
         return 0.0;
     }
-    0.0588 * letters - 0.296 * sentences - 15.8
+    0.058 * letters - 0.296 * sentences - 15.8
 }
 
 pub(crate) fn linsear_write_formula(text: &str, strict_lower: bool, strict_upper: bool) -> f64 {
