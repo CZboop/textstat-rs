@@ -4,6 +4,7 @@ use crate::tokenize::word_list;
 use crate::transform::remove_punctuation;
 
 use regex::Regex;
+use std::cmp;
 
 pub(crate) fn char_count(text: &str) -> usize {
     text.chars().filter(|c| !c.is_whitespace()).count()
@@ -29,10 +30,13 @@ pub(crate) fn sentence_count(text: &str) -> usize {
     }
     // get as a str vec from sentence_list
     // count if less than 2 words based on word_count
-    sentence_list(text)
-        .into_iter()
-        .filter(|s| word_count(s) > 2)
-        .count()
+    cmp::max(
+        1,
+        sentence_list(text)
+            .into_iter()
+            .filter(|s| word_count(s) > 2)
+            .count(),
+    )
 }
 
 pub(crate) fn word_count(text: &str) -> usize {
@@ -65,7 +69,9 @@ pub(crate) fn polysyllable_word_count(text: &str) -> usize {
 pub(crate) fn count_letters(text: &str) -> usize {
     let re = Regex::new(r"\s").unwrap();
     let text_minus_whitespace = re.replace_all(text, "");
-    remove_punctuation(&text_minus_whitespace, true).chars().count()
+    remove_punctuation(&text_minus_whitespace, true)
+        .chars()
+        .count()
 }
 
 pub(crate) fn letters_per_word(text: &str) -> f64 {
