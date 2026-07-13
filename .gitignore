@@ -77,3 +77,4 @@ TODO.md
 results/*.csv
 results/*.md
 _cache/
+diagnose_syllables.py

@@ -22,6 +22,16 @@ METRICS = [
     "reading_time",
 ]
 
+# primitive counts, exposed on both textstat and textstat_rs under the same names
+PRIMITIVES = [
+    "syllable_count",
+    "sentence_count",
+    "lexicon_count",
+    "char_count",
+    "letter_count",
+    "polysyllabcount",
+]
+
 
 def _git_sha() -> str:
     try:
@@ -49,31 +59,37 @@ def _bucket_table(deltas: list[float]) -> str:
     return "\n".join(lines)
 
 
-def _write_summary(path: Path, sha: str, per_metric: dict[str, list[float]]) -> None:
-    all_deltas = [d for ds in per_metric.values() for d in ds]
+def _section_table(title: str, names: list[str], per_metric: dict[str, list[float]]) -> list[str]:
     lines = [
-        f"# Parity summary ({sha})",
-        "",
-        "## Per metric",
+        f"## {title}",
         "",
         "| metric | n | avg | min | max |",
         "| --- | --- | --- | --- | --- |",
     ]
-    for m in METRICS:
+    for m in names:
         if per_metric.get(m):
             lines.append(_summary_row(m, per_metric[m]))
+    lines.append("")
+    return lines
+
+
+def _write_summary(path: Path, sha: str, per_metric: dict[str, list[float]]) -> None:
+    # Overall stats cover metrics only, to keep the historical baseline comparable.
+    metric_deltas = [d for m in METRICS for d in per_metric.get(m, [])]
+    lines = [f"# Parity summary ({sha})", ""]
+    lines += _section_table("Per metric", METRICS, per_metric)
+    lines += _section_table("Primitive counts", PRIMITIVES, per_metric)
     lines += [
-        "",
-        "## Overall",
+        "## Overall (metrics)",
         "",
         "| n | avg | min | max |",
         "| --- | --- | --- | --- |",
-        f"| {len(all_deltas)} | {sum(all_deltas) / len(all_deltas):.6f} "
-        f"| {min(all_deltas):.6f} | {max(all_deltas):.6f} |",
+        f"| {len(metric_deltas)} | {sum(metric_deltas) / len(metric_deltas):.6f} "
+        f"| {min(metric_deltas):.6f} | {max(metric_deltas):.6f} |",
         "",
-        "## Delta buckets (overall)",
+        "## Delta buckets (metrics)",
         "",
-        _bucket_table(all_deltas),
+        _bucket_table(metric_deltas),
         "",
     ]
     path.write_text("\n".join(lines), encoding="utf-8")
@@ -91,25 +107,29 @@ def main():
 
     with out.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["metric", "sample_id", "rs", "py", "abs_delta", "rel_delta", "text"])
+        w.writerow(
+            ["kind", "metric", "sample_id", "rs", "py", "abs_delta", "rel_delta", "text"]
+        )
         for sample_id, text in samples:
-            for m in METRICS:
-                rs = getattr(textstat_rs, m)(text)
-                py = getattr(textstat, m)(text)
-                abs_d = abs(rs - py)
-                rel_d = abs(abs_d / py if py else 0.0)
-                per_metric[m].append(abs_d)
-                w.writerow(
-                    [
-                        m,
-                        sample_id,
-                        f"{rs:.6f}",
-                        f"{py:.6f}",
-                        f"{abs_d:.6f}",
-                        f"{rel_d:.6f}",
-                        text,
-                    ]
-                )
+            for kind, names in (("metric", METRICS), ("primitive", PRIMITIVES)):
+                for m in names:
+                    rs = getattr(textstat_rs, m)(text)
+                    py = getattr(textstat, m)(text)
+                    abs_d = abs(rs - py)
+                    rel_d = abs(abs_d / py if py else 0.0)
+                    per_metric[m].append(abs_d)
+                    w.writerow(
+                        [
+                            kind,
+                            m,
+                            sample_id,
+                            f"{rs:.6f}",
+                            f"{py:.6f}",
+                            f"{abs_d:.6f}",
+                            f"{rel_d:.6f}",
+                            text,
+                        ]
+                    )
 
     _write_summary(summary_out, sha, per_metric)
     print(f"wrote {out}")

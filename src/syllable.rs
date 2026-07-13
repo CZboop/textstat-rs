@@ -1,9 +1,6 @@
-use hyphenation::{Hyphenator, Language, Load, Standard};
+use crate::pyphen;
 use std::collections::HashMap;
 use std::sync::LazyLock;
-
-static EN_US: LazyLock<Standard> =
-    LazyLock::new(|| Standard::from_embedded(Language::EnglishUS).unwrap());
 
 static CMU_RAW: &str = include_str!("data/cmudict.txt");
 
@@ -42,6 +39,6 @@ pub(crate) fn count_syllables(text: &str) -> usize {
         return n.max(1);
     }
 
-    // out of vocab fallback, typographic breaks + 1, to match pyphen
-    (EN_US.hyphenate(&lower).breaks.len() + 1).max(1)
+    // out of vocab fallback - hyphenation points + 1, as textstat does via pyphen
+    pyphen::positions(&lower).len() + 1
 }
