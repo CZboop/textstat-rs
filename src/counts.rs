@@ -2,8 +2,6 @@ use crate::syllable::count_syllables;
 use crate::tokenize::sentence_list;
 use crate::tokenize::word_list;
 use crate::transform::remove_punctuation;
-
-use regex::Regex;
 use std::cmp;
 
 pub(crate) fn char_count(text: &str) -> usize {
@@ -67,8 +65,7 @@ pub(crate) fn polysyllable_word_count(text: &str) -> usize {
 }
 
 pub(crate) fn count_letters(text: &str) -> usize {
-    let re = Regex::new(r"\s").unwrap();
-    let text_minus_whitespace = re.replace_all(text, "");
+    let text_minus_whitespace: String = text.chars().filter(|c| !c.is_whitespace()).collect();
     remove_punctuation(&text_minus_whitespace, true)
         .chars()
         .count()
