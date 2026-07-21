@@ -1,8 +1,9 @@
-use fancy_regex::Regex;
+use fancy_regex::Regex as FancyRegex;
+use regex::Regex;
 use std::sync::LazyLock;
 
-static RE_NONCONTRACTION_APOSTROPHE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"\'(?![tsd]|ve|ll|re)").unwrap());
+static RE_NONCONTRACTION_APOSTROPHE: LazyLock<FancyRegex> =
+    LazyLock::new(|| FancyRegex::new(r"\'(?![tsd]|ve|ll|re)").unwrap());
 static RE_PUNCTUATION_RM_APOSTROPHE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"[^\w\s]").unwrap());
 static RE_PUNCTUATION_KEEP_APOSTROPHE: LazyLock<Regex> =
