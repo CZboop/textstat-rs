@@ -182,7 +182,7 @@ pub(crate) fn text_standard(text: &str) -> String {
     // SMOG Index
     let score = smog_index(text);
     let lower = score.floor() as i32;
-    let upper = score.floor() as i32;
+    let upper = score.ceil() as i32;
     let near = score.round() as i32;
     grade.extend([lower, upper, near]);
 
@@ -224,15 +224,15 @@ pub(crate) fn text_standard(text: &str) -> String {
     grade.extend([lower, upper, near]);
 
     // Finding the Readability Consensus based on all the above tests
+    let counts = grade.iter().fold(HashMap::new(), |mut m, &g| {
+        *m.entry(g).or_insert(0usize) += 1;
+        m
+    });
+    let max_count = counts.values().copied().max().unwrap();
     let final_grade_numeric = grade
         .iter()
-        .fold(HashMap::new(), |mut m, &g| {
-            *m.entry(g).or_insert(0) += 1;
-            m
-        })
-        .into_iter()
-        .max_by_key(|&(_, c)| c)
-        .map(|(g, _)| g)
+        .copied()
+        .find(|g| counts[g] == max_count)
         .unwrap();
     let clamped_grade = final_grade_numeric.clamp(1, 18);
     let lower_score = clamped_grade - 1;

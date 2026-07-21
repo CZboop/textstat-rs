@@ -101,5 +101,5 @@ def test_text_standard_parity(text):
         int(re.search("\\d+", i).group(0))
         for i in textstat_rs.text_standard(text).split(" and ")
     ]
-    assert ts_grade_upper == pytest.approx(rs_grade_upper, abs=1.0)
-    assert ts_grade_lower == pytest.approx(rs_grade_lower, abs=1.0)
+    assert ts_grade_upper == pytest.approx(rs_grade_upper, abs=0.0)
+    assert ts_grade_lower == pytest.approx(rs_grade_lower, abs=0.0)
