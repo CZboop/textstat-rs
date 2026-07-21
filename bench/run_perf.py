@@ -25,14 +25,14 @@ def _no_op_lru(*args, **kwargs):
     return decorator
 
 
-functools.lru_cache = _no_op_lru
+# functools.lru_cache = _no_op_lru
 
 import textstat
 import textstat_rs
 
-functools.lru_cache = (
-    _real_lru  # revert post-import, textstat should use faked passthrough version
-)
+# functools.lru_cache = (
+#     _real_lru  # revert post-import, textstat should use faked passthrough version
+# )
 
 # Per-metric time cap on the python side. Some uncached py metrics are
 # very slow on large inputs, so without this the benchmark can run for hours.

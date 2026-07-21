@@ -78,4 +78,4 @@ results/*.csv
 results/*.md
 _cache/
 diagnose_syllables.py
-python\textstat_rs\textstat_rs.pdb
+python/textstat_rs/textstat_rs.pdb

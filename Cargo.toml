@@ -12,3 +12,7 @@ crate-type = ["cdylib"]
 fancy-regex = "0.18.0"
 pyo3 = "0.28.3"
 regex = "1.12.3"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
