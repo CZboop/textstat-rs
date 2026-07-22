@@ -31,12 +31,14 @@ mod textstat_rs {
 
     #[pyfunction]
     fn automated_readability_index(text: &str) -> PyResult<f64> {
-        Ok(formulas::automated_readability_index(text))
+        let stats = TextStats::new(text);
+        Ok(formulas::automated_readability_index(&stats))
     }
 
     #[pyfunction]
     fn coleman_liau_index(text: &str) -> PyResult<f64> {
-        Ok(formulas::coleman_liau_index(text))
+        let stats = TextStats::new(text);
+        Ok(formulas::coleman_liau_index(&stats))
     }
 
     #[pyfunction]

@@ -25,16 +25,17 @@ pub(crate) fn flesch_kincaid_grade(stats: &TextStats) -> f64 {
     0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59
 }
 
-pub(crate) fn automated_readability_index(text: &str) -> f64 {
-    let words = word_list(text, true, false, false, false, false).len() as f64;
-    let sentences = sentence_count(text) as f64;
-    let chars = char_count(text) as f64;
+pub(crate) fn automated_readability_index(stats: &TextStats) -> f64 {
+    let words = stats.words().len() as f64;
+    let sentences = *stats.n_sentences() as f64;
+    let chars = *stats.n_chars() as f64;
     4.71 * (chars / words) + 0.5 * (words / sentences) - 21.43
 }
 
-pub(crate) fn coleman_liau_index(text: &str) -> f64 {
-    let sentences = sentences_per_word(text) * 100 as f64;
-    let letters = letters_per_word(text) * 100 as f64;
+pub(crate) fn coleman_liau_index(stats: &TextStats) -> f64 {
+    let words = stats.words().len() as f64;
+    let sentences = if words == 0.0 { 0.0 } else { *stats.n_sentences() as f64 / words } * 100.0;
+    let letters = stats.letters_per_word() * 100 as f64;
     if letters == 0.0 || sentences == 0.0 {
         return 0.0;
     }
@@ -187,14 +188,14 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
     grade.extend([lower, upper, near]);
 
     // Coleman_Liau_Index
-    let score = coleman_liau_index(text);
+    let score = coleman_liau_index(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
     let near = score.round() as i32;
     grade.extend([lower, upper, near]);
 
     // Automated_Readability_Index
-    let score = automated_readability_index(text);
+    let score = automated_readability_index(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
     let near = score.round() as i32;

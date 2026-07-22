@@ -65,12 +65,13 @@ pub(crate) fn polysyllable_word_count(text: &str) -> usize {
 }
 
 pub(crate) fn count_letters(text: &str) -> usize {
-    let text_minus_whitespace: String = text.chars().filter(|c| !c.is_whitespace()).collect();
-    remove_punctuation(&text_minus_whitespace, true)
+    remove_punctuation(text, true)
         .chars()
+        .filter(|c| !c.is_whitespace())
         .count()
 }
 
+// TODO: may become redundant
 pub(crate) fn letters_per_word(text: &str) -> f64 {
     let letters = count_letters(text) as f64;
     let words = word_count(text) as f64;

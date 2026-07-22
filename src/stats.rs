@@ -1,7 +1,7 @@
 use crate::syllable::count_syllables;
 use std::cell::OnceCell;
 // lazy init - in case of stats that don't need everything computed
-use crate::counts::{char_count, sentence_count, syllable_count, words_per_sentence};
+use crate::counts::{char_count, sentence_count, syllable_count, words_per_sentence, count_letters, word_count};
 use crate::tokenize::word_list;
 
 pub(crate) struct TextStats<'a> {
@@ -13,7 +13,9 @@ pub(crate) struct TextStats<'a> {
     n_sentences: OnceCell<usize>,
     n_syllables: OnceCell<usize>,
     n_chars: OnceCell<usize>,
+    n_letters: OnceCell<usize>,
     words_per_sent: OnceCell<f64>,
+    letters_per_word: OnceCell<f64>,
 }
 
 impl<'a> TextStats<'a> {
@@ -26,8 +28,10 @@ impl<'a> TextStats<'a> {
             tokens_with_punct: OnceCell::new(),
             n_sentences: OnceCell::new(),
             n_syllables: OnceCell::new(),
-            n_chars: OnceCell::new(),
+            n_chars: OnceCell::new(), // NOTE: naming to match textstat def of chars/letters
+            n_letters: OnceCell::new(),
             words_per_sent: OnceCell::new(),
+            letters_per_word: OnceCell::new(),
         }
     }
 
@@ -63,7 +67,20 @@ impl<'a> TextStats<'a> {
         self.n_chars.get_or_init(|| char_count(self.text))
     }
 
+    pub fn n_letters(&self) -> &usize {
+        self.n_letters.get_or_init(|| count_letters(self.text))
+    }
+
     pub fn words_per_sent(&self) -> &f64 {
         self.words_per_sent.get_or_init(|| words_per_sentence(self.text))
+    }
+
+    pub fn letters_per_word(&self) -> f64 {
+        let letters = *self.n_letters() as f64;
+        let words = word_count(self.text) as f64;
+        if words == 0.0 {
+            return 0.0;
+        }
+        letters / words
     }
 }
