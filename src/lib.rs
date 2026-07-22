@@ -25,7 +25,8 @@ mod textstat_rs {
 
     #[pyfunction]
     fn flesch_kincaid_grade(text: &str) -> PyResult<f64> {
-        Ok(formulas::flesch_kincaid_grade(text))
+        let stats = TextStats::new(text);
+        Ok(formulas::flesch_kincaid_grade(&stats))
     }
 
     #[pyfunction]

@@ -18,10 +18,10 @@ pub(crate) fn flesch_reading_ease(stats: &TextStats) -> f64 {
     206.835 - 1.015 * sentence_length - 84.6 * syllables_per_word
 }
 
-pub(crate) fn flesch_kincaid_grade(text: &str) -> f64 {
-    let words = word_list(text, true, false, false, false, false).len() as f64;
-    let sentences = sentence_count(text) as f64;
-    let syllables = syllable_count(text) as f64;
+pub(crate) fn flesch_kincaid_grade(stats: &TextStats) -> f64 {
+    let words = stats.words().len() as f64;
+    let sentences = *stats.n_sentences() as f64;
+    let syllables = *stats.n_syllables() as f64;
     0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59
 }
 
@@ -151,7 +151,7 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
     // TODO: instead of pushing as you go, just create at the end?
 
     // Flesch Kincaid Grade
-    let score = flesch_kincaid_grade(text);
+    let score = flesch_kincaid_grade(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
     let near = score.round() as i32; // TODO: verify details (of rounding)
