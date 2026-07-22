@@ -42,24 +42,23 @@ pub(crate) fn coleman_liau_index(stats: &TextStats) -> f64 {
     0.058 * letters - 0.296 * sentences - 15.8
 }
 
-pub(crate) fn linsear_write_formula(text: &str, strict_lower: bool, strict_upper: bool) -> f64 {
-    let text_list = word_list(text, false, false, false, false, false);
+pub(crate) fn linsear_write_formula(stats: &TextStats, strict_lower: bool, strict_upper: bool) -> f64 {
+      let text_list = stats.tokens_with_punct();
 
-    let mut words_list = Vec::new();
-    let mut i_text = 0;
-    let mut word;
-    if strict_upper && text_list.len() > 100 {
-        while (i_text < text_list.len()) && (words_list.len() < 100) {
-            word = remove_punctuation(&text_list[i_text], false);
-            i_text += 1;
-            if word.len() > 0 {
-                words_list.push(word)
-            }
-        }
-    } else {
-        words_list = word_list(text, true, false, false, false, false);
-        i_text = text_list.len();
-    }
+      let truncated: Vec<String>;                    // declared, not yet initialized
+      let (words_list, i_text): (&[String], usize) = if strict_upper && text_list.len() > 100 {
+          let mut v = Vec::new();
+          let mut i = 0;
+          while i < text_list.len() && v.len() < 100 {
+              let word = remove_punctuation(&text_list[i], false);
+              i += 1;
+              if !word.is_empty() { v.push(word); }
+          }
+          truncated = v;                             // initialized here...
+          (&truncated, i)                            // ...so it can be borrowed here
+      } else {
+          (stats.words(), text_list.len())
+      };
     if strict_lower && (words_list.len() < 100) {
         return 0.0;
     }
@@ -211,7 +210,7 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
 
     // Linsear_Write_Formula
     // TODO: confirm bools
-    let score = linsear_write_formula(text, false, true);
+    let score = linsear_write_formula(stats, false, true);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
     let near = score.round() as i32;

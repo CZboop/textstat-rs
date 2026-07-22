@@ -44,8 +44,9 @@ mod textstat_rs {
     #[pyfunction]
     #[pyo3(signature = (text, strict_lower=false, strict_upper=true))]
     fn linsear_write_formula(text: &str, strict_lower: bool, strict_upper: bool) -> PyResult<f64> {
+        let stats = TextStats::new(text);
         Ok(formulas::linsear_write_formula(
-            text,
+            &stats,
             strict_lower,
             strict_upper,
         ))
