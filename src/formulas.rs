@@ -6,12 +6,12 @@ use crate::syllable::count_syllables;
 use crate::tokenize::word_list;
 use crate::transform::remove_punctuation;
 use std::collections::HashMap;
+use crate::stats::TextStats;
 
-pub(crate) fn flesch_reading_ease(text: &str) -> f64 {
-    let words = word_count(text) as f64;
-    let syllables = syllable_count(text) as f64;
-    let sentence_length = words_per_sentence(text);
-    let mut syllables_per_word = syllables / words;
+pub(crate) fn flesch_reading_ease(stats: &TextStats) -> f64 {
+    let words = stats.words().len() as f64;
+    let sentence_length = stats.words_per_sent();
+    let mut syllables_per_word = *stats.n_syllables() as f64 / words;
     if words == 0.0 {
         syllables_per_word = 0.0;
     }
@@ -145,7 +145,7 @@ pub(crate) fn smog_index(text: &str) -> f64 {
     (1.043 * (30.0 * (poly_syllab / sentences)).sqrt()) + 3.1291
 }
 
-pub(crate) fn text_standard(text: &str) -> String {
+pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
     // TODO: potentially add float_value boolean arg
     let mut grade: Vec<i32> = Vec::new(); // TODO: add with_capacity once know num items? should be constant
     // TODO: instead of pushing as you go, just create at the end?
@@ -159,7 +159,7 @@ pub(crate) fn text_standard(text: &str) -> String {
     grade.extend([lower, upper, near]);
 
     // Flesch Reading Ease
-    let score = flesch_reading_ease(text);
+    let score = flesch_reading_ease(stats);
     if score < 100.0 && score >= 90.0 {
         grade.push(5);
     } else if score < 90.0 && score >= 80.0 {

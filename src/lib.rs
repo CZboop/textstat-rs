@@ -14,11 +14,13 @@ mod textstat_rs {
     use crate::counts;
     use crate::formulas;
     use pyo3::prelude::*;
+    use crate::stats::TextStats;
 
     // Metrics
     #[pyfunction]
     fn flesch_reading_ease(text: &str) -> PyResult<f64> {
-        Ok(formulas::flesch_reading_ease(text))
+        let stats = TextStats::new(text);
+        Ok(formulas::flesch_reading_ease(&stats))
     }
 
     #[pyfunction]
@@ -80,7 +82,8 @@ mod textstat_rs {
 
     #[pyfunction]
     fn text_standard(text: &str) -> PyResult<String> {
-        Ok(formulas::text_standard(text))
+        let stats = TextStats::new(text);
+        Ok(formulas::text_standard(text, &stats))
     }
 
     // Internal counts 
