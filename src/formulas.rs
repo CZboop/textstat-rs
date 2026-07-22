@@ -45,7 +45,7 @@ pub(crate) fn coleman_liau_index(stats: &TextStats) -> f64 {
 pub(crate) fn linsear_write_formula(stats: &TextStats, strict_lower: bool, strict_upper: bool) -> f64 {
       let text_list = stats.tokens_with_punct();
 
-      let truncated: Vec<String>;                    // declared, not yet initialized
+      let truncated: Vec<String>; // declared, not yet initialized
       let (words_list, i_text): (&[String], usize) = if strict_upper && text_list.len() > 100 {
           let mut v = Vec::new();
           let mut i = 0;
@@ -54,8 +54,8 @@ pub(crate) fn linsear_write_formula(stats: &TextStats, strict_lower: bool, stric
               i += 1;
               if !word.is_empty() { v.push(word); }
           }
-          truncated = v;                             // initialized here...
-          (&truncated, i)                            // ...so it can be borrowed here
+          truncated = v; // initialized here...
+          (&truncated, i) // ...so it can be borrowed here
       } else {
           (stats.words(), text_list.len())
       };
