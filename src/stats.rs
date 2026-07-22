@@ -77,7 +77,7 @@ impl<'a> TextStats<'a> {
 
     pub fn letters_per_word(&self) -> f64 {
         let letters = *self.n_letters() as f64;
-        let words = word_count(self.text) as f64;
+        let words = self.words().len() as f64;
         if words == 0.0 {
             return 0.0;
         }
