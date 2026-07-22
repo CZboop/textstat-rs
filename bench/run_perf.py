@@ -1,67 +1,39 @@
-# temporarily override lru_cache to test non-cached py performance (get a sense of speedup potential once rust caching too)
-import functools
+"""Compare per-metric runtime between textstat (python) and textstat_rs.
+
+Both sides are measured the same way: in a fresh process, a warmup call on a
+throwaway text pays any lazy resource load (reported separately as init), then
+the corpus call is timed. Without that split the python numbers absorb ~380ms
+of dictionary loading and the speedups come out roughly 3x too flattering.
+
+Python needs a fresh process per sample because textstat lru_caches its metric
+functions, so a second call on the same text returns instantly. The rust
+extension does no such caching, so its samples run in one process.
+"""
+
 import multiprocessing as mp
+import statistics
 import time
-import timeit
 from bench.corpora import wikipedia_samples
+from bench.report import write_report
 
-_real_lru = functools.lru_cache
-
-
-def _no_op_lru(*args, **kwargs):
-    def decorator(fn):
-        @functools.wraps(fn)
-        def wrapper(*a, **kw):
-            return fn(*a, **kw)
-
-        wrapper.cache_clear = lambda: None
-        wrapper.cache_info = lambda: None
-        wrapper.__wrapped__ = fn
-        return wrapper
-
-    # Support both forms: @lru_cache and @lru_cache(maxsize=128)
-    if args and callable(args[0]) and not kwargs:
-        return decorator(args[0])
-    return decorator
-
-
-# functools.lru_cache = _no_op_lru
-
-import textstat
-import textstat_rs
-
-# functools.lru_cache = (
-#     _real_lru  # revert post-import, textstat should use faked passthrough version
-# )
-
-# Per-metric time cap on the python side. Some uncached py metrics are
-# very slow on large inputs, so without this the benchmark can run for hours.
+# Per-metric time cap on the python side. Some py metrics are very slow on
+# large inputs, so without this the benchmark can run for hours.
 PY_TIMEOUT_SECONDS = 300
 
+# Timed calls per side per metric; the median is reported.
+SAMPLES = 5
 
-def _py_time_once(metric_name, text, q):
-    fn = getattr(textstat, metric_name)
-    t0 = time.perf_counter()
-    fn(text)
-    q.put(time.perf_counter() - t0)
+CORPUS_ARTICLES = 100
 
-
-def time_py_with_timeout(metric_name, text, timeout):
-    """Run one python call in a subprocess, return elapsed seconds or None if it overran."""
-    ctx = mp.get_context("spawn")
-    q = ctx.Queue()
-    p = ctx.Process(target=_py_time_once, args=(metric_name, text, q), daemon=True)
-    p.start()
-    p.join(timeout)
-    if p.is_alive():
-        p.terminate()
-        p.join()
-        return None
-    try:
-        return q.get_nowait()
-    except Exception:
-        return None
-
+# Distinct from the corpus, so textstat's lru_cache can't serve the real call
+# from the warmup. Four sentences with some polysyllables, so metrics with an
+# early return on short input (smog needs 3+ sentences) still load everything.
+WARMUP_TEXT = (
+    "The quick brown fox jumps over the lazy dog. "
+    "Extraordinary circumstances necessitated immediate reconsideration. "
+    "Readability metrics evaluate textual complexity systematically. "
+    "Short words help as well."
+)
 
 METRICS = [
     "flesch_reading_ease",
@@ -78,27 +50,161 @@ METRICS = [
 ]
 
 
+def _py_worker(metric_name, text, q):
+    """One python sample: warm up, then time a single call on the corpus."""
+    import textstat
+
+    fn = getattr(textstat, metric_name)
+    t0 = time.perf_counter()
+    fn(WARMUP_TEXT)
+    init_s = time.perf_counter() - t0
+    t1 = time.perf_counter()
+    fn(text)
+    q.put({"init_s": init_s, "samples": [time.perf_counter() - t1]})
+
+
+def _rs_worker(metric_name, text, n_samples, q):
+    """All rust samples: warm up once, then time n_samples calls."""
+    import textstat_rs
+
+    fn = getattr(textstat_rs, metric_name)
+    t0 = time.perf_counter()
+    fn(WARMUP_TEXT)
+    init_s = time.perf_counter() - t0
+    samples = []
+    for _ in range(n_samples):
+        t1 = time.perf_counter()
+        fn(text)
+        samples.append(time.perf_counter() - t1)
+    q.put({"init_s": init_s, "samples": samples})
+
+
+def _run_worker(target, args, timeout):
+    """Run a worker in a spawned process; None if it overran or died."""
+    ctx = mp.get_context("spawn")
+    q = ctx.Queue()
+    p = ctx.Process(target=target, args=(*args, q), daemon=True)
+    p.start()
+    p.join(timeout)
+    if p.is_alive():
+        p.terminate()
+        p.join()
+        return None
+    try:
+        return q.get_nowait()
+    except Exception:
+        return None
+
+
+def _side(init_s, samples) -> dict:
+    return {
+        "init_ms": init_s * 1000,
+        "warm_ms": statistics.median(samples) * 1000,
+        "cold_ms": (init_s + statistics.median(samples)) * 1000,
+        "samples_ms": [s * 1000 for s in samples],
+    }
+
+
+def measure(metric_name, big_text) -> dict:
+    """Time one metric on both sides, median of SAMPLES timed calls each."""
+    rs_raw = _run_worker(_rs_worker, (metric_name, big_text, SAMPLES), PY_TIMEOUT_SECONDS)
+    if rs_raw is None:  # a panic or hang in the extension, not a slow metric
+        raise RuntimeError(f"rust worker failed or overran on {metric_name}")
+    rs = _side(rs_raw["init_s"], rs_raw["samples"])
+
+    py_samples, py_init_s, timed_out = [], None, False
+    for _ in range(SAMPLES):
+        raw = _run_worker(_py_worker, (metric_name, big_text), PY_TIMEOUT_SECONDS)
+        if raw is None:  # no point sampling further once it overruns the cap
+            timed_out = True
+            break
+        py_init_s = raw["init_s"] if py_init_s is None else py_init_s
+        py_samples += raw["samples"]
+
+    if timed_out:
+        # All we know is that python took longer than the cap, so the speedups
+        # below are lower bounds computed off it.
+        py = {"init_ms": None, "warm_ms": None, "cold_ms": None, "samples_ms": []}
+        py_warm_ms = py_cold_ms = PY_TIMEOUT_SECONDS * 1000
+    else:
+        py = _side(py_init_s, py_samples)
+        py_warm_ms, py_cold_ms = py["warm_ms"], py["cold_ms"]
+
+    return {
+        "metric": metric_name,
+        "rust": rs,
+        "python": py,
+        "timed_out": timed_out,
+        "speedup": (py_warm_ms / rs["warm_ms"]) if rs["warm_ms"] else None,
+        "speedup_cold": (py_cold_ms / rs["cold_ms"]) if rs["cold_ms"] else None,
+    }
+
+
+def format_cells(row: dict) -> dict:
+    """Display strings for one row, shared by the terminal table and markdown."""
+
+    def speedup(key):
+        if row[key] is None:
+            return "inf"
+        return f">{row[key]:.0f}x" if row["timed_out"] else f"{row[key]:.2f}x"
+
+    def ms(side, key):
+        value = row[side][key]
+        if value is None:
+            return f">{PY_TIMEOUT_SECONDS * 1000:.0f}" if key == "warm_ms" else "-"
+        return f"{value:.2f}"
+
+    return {
+        "rust": ms("rust", "warm_ms"),
+        "rust_init": ms("rust", "init_ms"),
+        "python": ms("python", "warm_ms"),
+        "python_init": ms("python", "init_ms"),
+        "speedup": speedup("speedup"),
+        "speedup_cold": speedup("speedup_cold"),
+    }
+
+
 def main():
-    samples = wikipedia_samples(100)
+    samples = wikipedia_samples(CORPUS_ARTICLES)
     big_text = "\n\n".join(t for _, t in samples)
     n_chars = len(big_text)
 
     print(
-        f"Corpus: {len(samples)} articles, {n_chars/1e6:.2f} MB  (py timeout/metric: {PY_TIMEOUT_SECONDS}s)"
+        f"Corpus: {len(samples)} articles, {n_chars/1e6:.2f} MB  "
+        f"(median of {SAMPLES}, py timeout/metric: {PY_TIMEOUT_SECONDS}s)"
     )
-    print(f"{'metric':<32} {'rust (ms)':>12} {'python (ms)':>14} {'speedup':>12}")
-    print("-" * 74)
+    header = (
+        f"{'metric':<30} {'rs warm':>10} {'py warm':>10} {'speedup':>9} "
+        f"{'rs init':>9} {'py init':>9} {'speedup+init':>13}"
+    )
+    print(header)
+    print("-" * len(header))
+
+    rows = []
     for m in METRICS:
-        rs_fn = getattr(textstat_rs, m)
-        rs_t = timeit.timeit(lambda: rs_fn(big_text), number=5) / 5
-        py_t = time_py_with_timeout(m, big_text, PY_TIMEOUT_SECONDS)
-        if py_t is None:
-            py_str = f">{PY_TIMEOUT_SECONDS * 1000:.0f}"
-            speedup_str = f">{PY_TIMEOUT_SECONDS / rs_t:.0f}x" if rs_t else "inf"
-        else:
-            py_str = f"{py_t * 1000:.2f}"
-            speedup_str = f"{py_t / rs_t:.2f}x" if rs_t else "inf"
-        print(f"{m:<32} {rs_t * 1000:>12.2f} {py_str:>14} {speedup_str:>12}")
+        row = measure(m, big_text)
+        rows.append(row)
+        c = format_cells(row)
+        print(
+            f"{m:<30} {c['rust']:>10} {c['python']:>10} {c['speedup']:>9} "
+            f"{c['rust_init']:>9} {c['python_init']:>9} {c['speedup_cold']:>13}",
+            flush=True,  # so a redirected run streams instead of dumping at the end
+        )
+
+    out = write_report(
+        "perf",
+        {
+            "corpus": {
+                "source": "wikipedia",
+                "articles": len(samples),
+                "chars": n_chars,
+            },
+            "py_timeout_seconds": PY_TIMEOUT_SECONDS,
+            "samples": SAMPLES,
+            "rows": rows,
+        },
+    )
+    print(f"\nwrote {out}")
 
 
 if __name__ == "__main__":

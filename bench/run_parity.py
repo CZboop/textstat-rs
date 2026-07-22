@@ -1,5 +1,4 @@
 import csv
-import subprocess
 from collections import defaultdict
 from pathlib import Path
 
@@ -7,6 +6,7 @@ import textstat
 import textstat_rs
 
 from bench.corpora import wikipedia_samples
+from bench.report import git_sha, write_report
 
 METRICS = [
     "flesch_reading_ease",
@@ -35,30 +35,55 @@ PRIMITIVES = [
 ]
 
 
-def _git_sha() -> str:
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"], text=True
-        ).strip()
-    except Exception:
-        return "nogit"
-
-
 def _summary_row(name: str, deltas: list[float]) -> str:
     avg = sum(deltas) / len(deltas)
     return f"| {name} | {len(deltas)} | {avg:.6f} | {min(deltas):.6f} | {max(deltas):.6f} |"
 
 
-def _bucket_table(deltas: list[float]) -> str:
+def _stats(deltas: list[float]) -> dict:
+    return {
+        "n": len(deltas),
+        "avg": sum(deltas) / len(deltas),
+        "min": min(deltas),
+        "max": max(deltas),
+    }
+
+
+def _buckets(deltas: list[float]) -> list[dict]:
+    # `== 0` is an exact-match count, so the float equality check is deliberate.
     thresholds = [("== 0", lambda d: d == 0.0)]
     thresholds += [(f"< {t}", (lambda t: lambda d: d < t)(t)) for t in (1, 2, 5, 10)]
     total = len(deltas)
-    lines = ["| bucket | count | percentage |", "| --- | --- | --- |"]
+    out = []
     for label, pred in thresholds:
         n = sum(1 for d in deltas if pred(d))
-        pct = (n / total * 100) if total else 0.0
-        lines.append(f"| {label} | {n} | {pct:.2f}% |")
+        out.append({"label": label, "count": n, "pct": (n / total * 100) if total else 0.0})
+    return out
+
+
+def _bucket_table(deltas: list[float]) -> str:
+    lines = ["| bucket | count | percentage |", "| --- | --- | --- |"]
+    for b in _buckets(deltas):
+        lines.append(f"| {b['label']} | {b['count']} | {b['pct']:.2f}% |")
     return "\n".join(lines)
+
+
+def _payload(per_metric: dict[str, list[float]], n_samples: int, max_chars: int) -> dict:
+    """The same summary the markdown shows, in a form update_readme can render."""
+    metric_deltas = [d for m in METRICS for d in per_metric.get(m, [])]
+    buckets = _buckets(metric_deltas)
+    exact = next(b["pct"] for b in buckets if b["label"] == "== 0")
+
+    def section(names):
+        return [{"metric": m, **_stats(per_metric[m])} for m in names if per_metric.get(m)]
+
+    return {
+        "corpus": {"source": "wikipedia", "samples": n_samples, "max_chars": max_chars},
+        "metrics": section(METRICS),
+        "primitives": section(PRIMITIVES),
+        "overall": {**_stats(metric_deltas), "exact_match_pct": exact},
+        "buckets": buckets,
+    }
 
 
 def _section_table(title: str, names: list[str], per_metric: dict[str, list[float]]) -> list[str]:
@@ -97,13 +122,17 @@ def _write_summary(path: Path, sha: str, per_metric: dict[str, list[float]]) -> 
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
+CORPUS_SAMPLES = 1000
+CORPUS_MAX_CHARS = 5000
+
+
 def main():
-    sha = _git_sha()
+    sha = git_sha()
     results_dir = Path(__file__).parent.parent / "results"
     results_dir.mkdir(exist_ok=True)
     out = results_dir / f"parity_{sha}.csv"
     summary_out = results_dir / f"parity_{sha}.md"
-    samples = wikipedia_samples(1000)
+    samples = wikipedia_samples(CORPUS_SAMPLES, CORPUS_MAX_CHARS)
 
     per_metric: dict[str, list[float]] = defaultdict(list)
 
@@ -134,8 +163,12 @@ def main():
                     )
 
     _write_summary(summary_out, sha, per_metric)
+    report_out = write_report(
+        "parity", _payload(per_metric, len(samples), CORPUS_MAX_CHARS)
+    )
     print(f"wrote {out}")
     print(f"wrote {summary_out}")
+    print(f"wrote {report_out}")
 
 
 if __name__ == "__main__":
