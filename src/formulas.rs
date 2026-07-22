@@ -128,26 +128,26 @@ pub(crate) fn mcalpine_eflaw(stats: &TextStats) -> f64 {
 
 pub(crate) fn spache_readability(stats: &TextStats) -> f64 {
     // TODO: migrate to use word_count instead of word_list len wherever that works
-    let num_total_words = stats.words().len();
-    let asl = stats.words_per_sentence();
-    if num_total_words == 0 {
+    let num_total_words = stats.words().len() as f64;
+    let asl = stats.words_per_sentence() as f64;
+    if num_total_words == 0.0 {
         return 0.0;
     } else {
-        let pdw = 100 * stats.count_difficult_words(2) / num_total_words;
+        let pdw = 100.0 * stats.count_difficult_words(2) as f64 / num_total_words;
         (0.141 * asl as f64) + (0.086 * pdw as f64) + 0.839
     }
 }
 
 pub(crate) fn dale_chall_readability_score(stats: &TextStats) -> f64 {
-    let word_count = stats.words().len();
-    let hard_count = stats.count_difficult_words(0);
-    if word_count == 0 {
+    let word_count = stats.words().len() as f64;
+    let hard_count = stats.count_difficult_words(0) as f64;
+    if word_count == 0.0 {
         return 0.0;
     } else {
-        let per_difficult_words = 100 * hard_count / word_count;
+        let per_difficult_words = 100.0 * hard_count / word_count;
         let mut score =
             (0.1579 * per_difficult_words as f64) + (0.0496 * stats.words_per_sentence() as f64);
-        if per_difficult_words > 5 {
+        if per_difficult_words > 5.0 {
             score += 3.6365
         }
         score
