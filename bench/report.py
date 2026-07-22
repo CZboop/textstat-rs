@@ -19,10 +19,17 @@ README = ROOT / "README.md"
 
 
 def git_sha() -> str:
+    """Short HEAD sha, suffixed -dirty if the tree has uncommitted changes.
+
+    Without the suffix a run against modified sources publishes numbers under a
+    commit that does not contain the code that produced them.
+    """
     try:
-        return subprocess.check_output(
+        sha = subprocess.check_output(
             ["git", "rev-parse", "--short", "HEAD"], text=True
         ).strip()
+        dirty = subprocess.check_output(["git", "status", "--porcelain"], text=True)
+        return f"{sha}-dirty" if dirty.strip() else sha
     except Exception:
         return "nogit"
 

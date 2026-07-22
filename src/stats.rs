@@ -35,6 +35,10 @@ impl<'a> TextStats<'a> {
         }
     }
 
+    pub fn text(&self) -> &str {
+        self.text
+    }
+
     pub fn words(&self) -> &[String] {
         self.words
             .get_or_init(|| word_list(self.text, true, false, false, false, false))

@@ -66,23 +66,32 @@ pub(crate) fn linsear_write_formula(
     strict_lower: bool,
     strict_upper: bool,
 ) -> f64 {
-    let text_list = stats.tokens_with_punct();
+    // be lazy on long texts, only ever look at 100 words, check if longer
+    let is_long = stats.text().split_whitespace().nth(100).is_some();
 
     let truncated: Vec<String>; // declared, not yet initialized
-    let (words_list, i_text): (&[String], usize) = if strict_upper && text_list.len() > 100 {
-        let mut v = Vec::new();
-        let mut i = 0;
-        while i < text_list.len() && v.len() < 100 {
-            let word = remove_punctuation(&text_list[i], false);
-            i += 1;
+    let joined: String; // tokens consumed, re-joined for sentence_count
+    let words_list: &[String] = if strict_upper && is_long {
+        let mut v = Vec::with_capacity(100);
+        let mut consumed: Vec<&str> = Vec::new();
+        for token in stats.text().split_whitespace() {
+            consumed.push(token);
+            // keep going until v = 100 len, not same as whitespace split (e.g. punctuation)
+            let word = remove_punctuation(token, false);
             if !word.is_empty() {
                 v.push(word);
+                if v.len() == 100 {
+                    break;
+                }
             }
         }
+        joined = consumed.join(" ");
         truncated = v; // initialized here...
-        (&truncated, i) // ...so it can be borrowed here
+        &truncated // ...so it can be borrowed here
     } else {
-        (stats.words(), text_list.len())
+        // short text or truncation off, can't be lazy
+        joined = stats.tokens_with_punct().join(" ");
+        stats.words()
     };
     if strict_lower && (words_list.len() < 100) {
         return 0.0;
@@ -100,8 +109,7 @@ pub(crate) fn linsear_write_formula(
             }
         }
     }
-    let text = text_list[..i_text].join(" ");
-    let text_sentences = sentence_count(&text);
+    let text_sentences = sentence_count(&joined);
     if text_sentences == 0 {
         return 0.0;
     }

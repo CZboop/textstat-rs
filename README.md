@@ -27,23 +27,23 @@ _Generated from `bbf8ad9` on 2026-07-22, python 3.12.4 vs textstat 0.7.13, on Wi
 ## Performance
 
 <!-- bench:perf:start -->
-One call per metric over 100 concatenated Wikipedia articles (0.46 MB), median of 3. Both libraries are warmed first, so these are steady-state numbers with lazy resource loading excluded.
+One call per metric over 100 concatenated Wikipedia articles (0.46 MB), median of 5. Both libraries are warmed first, so these are steady-state numbers with lazy resource loading excluded.
 
 | metric | textstat-rs (ms) | textstat (ms) | speedup |
 | --- | --- | --- | --- |
-| flesch_reading_ease | 39.23 | 137.41 | 3.50x |
-| flesch_kincaid_grade | 33.02 | 139.14 | 4.21x |
-| automated_readability_index | 17.02 | 46.73 | 2.75x |
-| coleman_liau_index | 12.91 | 56.27 | 4.36x |
-| dale_chall_readability_score | 30.17 | 171.64 | 5.69x |
-| gunning_fog | 28.51 | 185.50 | 6.51x |
-| smog_index | 25.68 | 193.78 | 7.55x |
-| linsear_write_formula | 4.10 | 3.74 | 0.91x |
-| mcalpine_eflaw | 18.70 | 43.21 | 2.31x |
-| spache_readability | 28.43 | 183.70 | 6.46x |
-| reading_time | 1.01 | 13.10 | 12.98x |
+| flesch_reading_ease | 37.76 | 136.10 | 3.60x |
+| flesch_kincaid_grade | 34.58 | 128.76 | 3.72x |
+| automated_readability_index | 16.78 | 43.69 | 2.60x |
+| coleman_liau_index | 12.82 | 56.66 | 4.42x |
+| dale_chall_readability_score | 27.00 | 168.03 | 6.22x |
+| gunning_fog | 28.07 | 178.12 | 6.34x |
+| smog_index | 25.33 | 192.56 | 7.60x |
+| linsear_write_formula | 0.10 | 4.05 | 39.90x |
+| mcalpine_eflaw | 17.97 | 41.44 | 2.31x |
+| spache_readability | 31.70 | 196.31 | 6.19x |
+| reading_time | 0.90 | 13.66 | 15.18x |
 
-On top of that, the first call in a fresh process pays a one-off load of the syllable and word-list resources: up to 31 ms for `textstat-rs` against 424 ms for `textstat`.
+On top of that, the first call in a fresh process pays a one-off load of the syllable and word-list resources: up to 35 ms for `textstat-rs` against 431 ms for `textstat`.
 
-_Generated from `bbf8ad9` on 2026-07-22, python 3.12.4 vs textstat 0.7.13, on Windows-11-10.0.26200-SP0._
+_Generated from `00d7399-dirty` on 2026-07-22, python 3.12.4 vs textstat 0.7.13, on Windows-11-10.0.26200-SP0._
 <!-- bench:perf:end -->
