@@ -26,13 +26,17 @@ pub(crate) fn sentence_count(text: &str) -> usize {
     if text.is_empty() {
         return 0;
     }
-    // get as a str vec from sentence_list
-    // count if less than 2 words based on word_count
+    // count if less than 2 words
     cmp::max(
         1,
         sentence_list(text)
             .into_iter()
-            .filter(|s| word_count(s) > 2)
+            .filter(|s| {
+                remove_punctuation(s, false)
+                    .split_whitespace()
+                    .nth(2)
+                    .is_some()
+            })
             .count(),
     )
 }
