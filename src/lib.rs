@@ -146,6 +146,18 @@ mod textstat_rs {
     fn polysyllabcount(text: &str) -> PyResult<usize> {
         Ok(counts::polysyllable_word_count(text))
     }
+
+    #[pyfunction]
+    #[pyo3(signature = (text, max_size=3))]
+    fn miniword_count(text: &str, max_size: usize) -> PyResult<usize> {
+        Ok(counts::miniword_count(text, max_size))
+    }
+
+    #[pyfunction]
+    #[pyo3(signature = (text, syllable_threshold=2, unique=true))]
+    fn difficult_words(text: &str, syllable_threshold: usize, unique: bool) -> PyResult<usize> {
+        Ok(counts::count_difficult_words(text, syllable_threshold, unique))
+    }
 }
 
 mod data;

@@ -4,9 +4,9 @@ use std::sync::LazyLock;
 static RE_APOSTROPHE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"'((?:ve|ll|re|[tsd])?)").unwrap());
 static RE_PUNCTUATION_RM_APOSTROPHE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"[^\w\s]").unwrap());
+    LazyLock::new(|| Regex::new(r"[^\p{L}\p{N}_\s]").unwrap());
 static RE_PUNCTUATION_KEEP_APOSTROPHE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"[^\w\s\']").unwrap());
+    LazyLock::new(|| Regex::new(r"[^\p{L}\p{N}_\s']").unwrap());
 
 pub(crate) fn remove_punctuation(text: &str, rm_apostrophe: bool) -> String {
     let mut new_text = text.to_owned();

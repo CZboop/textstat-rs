@@ -15,10 +15,10 @@ pub(crate) fn syllable_count(text: &str) -> usize {
         .sum()
 }
 
-pub(crate) fn miniword_count(text: &str) -> usize {
+pub(crate) fn miniword_count(text: &str, max_size: usize) -> usize {
     word_list(text, true, true, false, false, false)
         .iter()
-        .filter(|w| w.chars().count() <= 3)
+        .filter(|w| w.chars().count() <= max_size)
         .count()
 }
 
@@ -49,15 +49,22 @@ pub(crate) fn words_per_sentence(text: &str) -> f64 {
     word_list(text, true, false, false, false, false).len() as f64 / sentence_count(text) as f64
 }
 
-pub(crate) fn count_difficult_words(text: &str, syllable_threshold: usize) -> usize {
+pub(crate) fn count_difficult_words(text: &str, syllable_threshold: usize, unique: bool) -> usize {
     let easy_words = crate::data::easy_words();
-    word_list(text, true, false, false, false, false)
-        .iter()
-        .filter(|w| {
-            let lower = w.to_lowercase();
-            !easy_words.contains(lower.as_str()) && count_syllables(&lower) >= syllable_threshold
-        })
-        .count()
+    let words = word_list(text, true, false, false, false, false);
+    let difficult = words.iter().filter(|w| {
+        let lower = w.to_lowercase();
+        !easy_words.contains(lower.as_str()) && count_syllables(&lower) >= syllable_threshold
+    });
+    if unique {
+        // textstat dedupes on the original-case token (set built before lowercasing)
+        difficult
+            .map(|w| w.as_str())
+            .collect::<std::collections::HashSet<_>>()
+            .len()
+    } else {
+        difficult.count()
+    }
 }
 
 pub(crate) fn polysyllable_word_count(text: &str) -> usize {

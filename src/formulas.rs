@@ -2,11 +2,11 @@ use crate::counts::{
     char_count, count_difficult_words, letters_per_word, miniword_count, polysyllable_word_count,
     sentence_count, sentences_per_word, syllable_count, word_count, words_per_sentence,
 };
+use crate::stats::TextStats;
 use crate::syllable::count_syllables;
 use crate::tokenize::word_list;
 use crate::transform::remove_punctuation;
 use std::collections::HashMap;
-use crate::stats::TextStats;
 
 pub(crate) fn flesch_reading_ease(stats: &TextStats) -> f64 {
     let words = stats.words().len() as f64;
@@ -26,15 +26,34 @@ pub(crate) fn flesch_kincaid_grade(stats: &TextStats) -> f64 {
 }
 
 pub(crate) fn automated_readability_index(stats: &TextStats) -> f64 {
+    let raw_tokens = stats.tokens_with_punct().len() as f64; // count_words(rm_punctuation=False)
     let words = stats.words().len() as f64;
     let sentences = *stats.n_sentences() as f64;
     let chars = *stats.n_chars() as f64;
-    4.71 * (chars / words) + 0.5 * (words / sentences) - 21.43
+
+    let chars_per_word = if raw_tokens == 0.0 {
+        0.0
+    } else {
+        chars / raw_tokens
+    };
+    let words_per_sentence = if sentences == 0.0 {
+        0.0
+    } else {
+        words / sentences
+    };
+    if chars_per_word == 0.0 || words_per_sentence == 0.0 {
+        return 0.0;
+    }
+    (4.71 * chars_per_word) + (0.5 * words_per_sentence) - 21.43
 }
 
 pub(crate) fn coleman_liau_index(stats: &TextStats) -> f64 {
     let words = stats.words().len() as f64;
-    let sentences = if words == 0.0 { 0.0 } else { *stats.n_sentences() as f64 / words } * 100.0;
+    let sentences = if words == 0.0 {
+        0.0
+    } else {
+        *stats.n_sentences() as f64 / words
+    } * 100.0;
     let letters = stats.letters_per_word() * 100 as f64;
     if letters == 0.0 || sentences == 0.0 {
         return 0.0;
@@ -42,23 +61,29 @@ pub(crate) fn coleman_liau_index(stats: &TextStats) -> f64 {
     0.058 * letters - 0.296 * sentences - 15.8
 }
 
-pub(crate) fn linsear_write_formula(stats: &TextStats, strict_lower: bool, strict_upper: bool) -> f64 {
-      let text_list = stats.tokens_with_punct();
+pub(crate) fn linsear_write_formula(
+    stats: &TextStats,
+    strict_lower: bool,
+    strict_upper: bool,
+) -> f64 {
+    let text_list = stats.tokens_with_punct();
 
-      let truncated: Vec<String>; // declared, not yet initialized
-      let (words_list, i_text): (&[String], usize) = if strict_upper && text_list.len() > 100 {
-          let mut v = Vec::new();
-          let mut i = 0;
-          while i < text_list.len() && v.len() < 100 {
-              let word = remove_punctuation(&text_list[i], false);
-              i += 1;
-              if !word.is_empty() { v.push(word); }
-          }
-          truncated = v; // initialized here...
-          (&truncated, i) // ...so it can be borrowed here
-      } else {
-          (stats.words(), text_list.len())
-      };
+    let truncated: Vec<String>; // declared, not yet initialized
+    let (words_list, i_text): (&[String], usize) = if strict_upper && text_list.len() > 100 {
+        let mut v = Vec::new();
+        let mut i = 0;
+        while i < text_list.len() && v.len() < 100 {
+            let word = remove_punctuation(&text_list[i], false);
+            i += 1;
+            if !word.is_empty() {
+                v.push(word);
+            }
+        }
+        truncated = v; // initialized here...
+        (&truncated, i) // ...so it can be borrowed here
+    } else {
+        (stats.words(), text_list.len())
+    };
     if strict_lower && (words_list.len() < 100) {
         return 0.0;
     }
@@ -130,7 +155,7 @@ pub(crate) fn dale_chall_readability_score(stats: &TextStats) -> f64 {
 }
 
 pub(crate) fn gunning_fog(stats: &TextStats, syllable_threshold: usize) -> f64 {
-    let difficult_words = stats.count_difficult_words( syllable_threshold);
+    let difficult_words = stats.count_difficult_words(syllable_threshold);
     let total_words = stats.words().len();
     if total_words == 0 {
         return 0.0;

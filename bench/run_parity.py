@@ -30,6 +30,8 @@ PRIMITIVES = [
     "char_count",
     "letter_count",
     "polysyllabcount",
+    "miniword_count",
+    "difficult_words",
 ]
 
 
