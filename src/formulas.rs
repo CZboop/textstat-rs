@@ -88,16 +88,16 @@ pub(crate) fn linsear_write_formula(text: &str, strict_lower: bool, strict_upper
     number / 2.0
 }
 
-pub(crate) fn reading_time(text: &str, ms_per_char: f64) -> f64 {
+pub(crate) fn reading_time(stats: &TextStats, ms_per_char: f64) -> f64 {
     // TODO: char_count ignore_spaces boolean arg
-    let time: f64 = ms_per_char * char_count(text) as f64 / 1000.0;
+    let time: f64 = ms_per_char * *stats.n_chars() as f64 / 1000.0;
     time
 }
 
-pub(crate) fn mcalpine_eflaw(text: &str) -> f64 {
-    let n_words = word_list(text, true, false, false, false, false).len();
-    let n_sentences = sentence_count(text);
-    let n_miniwords = miniword_count(text);
+pub(crate) fn mcalpine_eflaw(stats: &TextStats) -> f64 {
+    let n_words = stats.words().len() as f64;
+    let n_sentences = *stats.n_sentences() as f64;
+    let n_miniwords = stats.miniword_count() as f64;
 
     (n_words + n_miniwords) as f64 / n_sentences as f64
 }

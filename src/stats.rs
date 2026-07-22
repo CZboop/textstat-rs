@@ -83,4 +83,11 @@ impl<'a> TextStats<'a> {
         }
         letters / words
     }
+
+    pub fn miniword_count(&self) -> usize {
+        self.words_no_apostrophe()
+            .iter()
+            .filter(|w| w.chars().count() <= 3)
+            .count()
+    }
 }
