@@ -6,6 +6,7 @@ mod pyphen;
 mod syllable;
 mod tokenize;
 mod transform;
+mod stats;
 
 /// A Python module implemented in Rust.
 #[pymodule]
