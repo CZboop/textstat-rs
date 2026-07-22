@@ -70,7 +70,7 @@ impl<'a> TextStats<'a> {
     pub fn n_letters(&self) -> &usize {
         self.n_letters.get_or_init(|| count_letters(self.text))
     }
-
+    // TODO: switch to words_per_sentence
     pub fn words_per_sent(&self) -> &f64 {
         self.words_per_sent.get_or_init(|| words_per_sentence(self.text))
     }
@@ -90,4 +90,28 @@ impl<'a> TextStats<'a> {
             .filter(|w| w.chars().count() <= 3)
             .count()
     }
+
+    pub fn words_per_sentence(&self) -> f64 {
+        self.words().len() as f64 / *self.n_sentences() as f64
+    }
+
+    pub fn count_difficult_words(&self, syllable_threshold: usize) -> usize {
+        let easy_words = crate::data::easy_words();
+        self.words()
+            .iter()
+            .filter(|w| {
+                let lower = w.to_lowercase();
+                !easy_words.contains(lower.as_str()) && count_syllables(&lower) >= syllable_threshold
+            })
+            .count()
+    }
+
+    pub fn polysyllable_word_count(&self) -> usize {
+        self.words()
+        .iter()
+        // TODO: can this use internal syllable count?
+        .map(|w| count_syllables(w))
+        .filter(|c| *c >= 3)
+        .count()
+}
 }

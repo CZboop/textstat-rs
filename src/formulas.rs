@@ -102,26 +102,27 @@ pub(crate) fn mcalpine_eflaw(stats: &TextStats) -> f64 {
     (n_words + n_miniwords) as f64 / n_sentences as f64
 }
 
-pub(crate) fn spache_readability(text: &str) -> f64 {
-    let num_total_words = word_count(text);
-    let asl = words_per_sentence(text);
+pub(crate) fn spache_readability(stats: &TextStats) -> f64 {
+    // TODO: migrate to use word_count instead of word_list len wherever that works
+    let num_total_words = stats.words().len();
+    let asl = stats.words_per_sentence();
     if num_total_words == 0 {
         return 0.0;
     } else {
-        let pdw = 100 * count_difficult_words(text, 2) / num_total_words;
+        let pdw = 100 * stats.count_difficult_words(2) / num_total_words;
         (0.141 * asl as f64) + (0.086 * pdw as f64) + 0.839
     }
 }
 
-pub(crate) fn dale_chall_readability_score(text: &str) -> f64 {
-    let word_count = word_count(text);
-    let hard_count = count_difficult_words(text, 0);
+pub(crate) fn dale_chall_readability_score(stats: &TextStats) -> f64 {
+    let word_count = stats.words().len();
+    let hard_count = stats.count_difficult_words(0);
     if word_count == 0 {
         return 0.0;
     } else {
         let per_difficult_words = 100 * hard_count / word_count;
         let mut score =
-            (0.1579 * per_difficult_words as f64) + (0.0496 * words_per_sentence(text) as f64);
+            (0.1579 * per_difficult_words as f64) + (0.0496 * stats.words_per_sentence() as f64);
         if per_difficult_words > 5 {
             score += 3.6365
         }
@@ -129,20 +130,20 @@ pub(crate) fn dale_chall_readability_score(text: &str) -> f64 {
     }
 }
 
-pub(crate) fn gunning_fog(text: &str, syllable_threshold: usize) -> f64 {
-    let difficult_words = count_difficult_words(text, syllable_threshold);
-    let total_words = word_count(text);
+pub(crate) fn gunning_fog(stats: &TextStats, syllable_threshold: usize) -> f64 {
+    let difficult_words = stats.count_difficult_words( syllable_threshold);
+    let total_words = stats.words().len();
     if total_words == 0 {
         return 0.0;
     } else {
         let per_difficult_words = 100.0 * difficult_words as f64 / total_words as f64;
-        0.4 * (words_per_sentence(text) as f64 + per_difficult_words)
+        0.4 * (stats.words_per_sentence() as f64 + per_difficult_words)
     }
 }
 
-pub(crate) fn smog_index(text: &str) -> f64 {
-    let sentences = sentence_count(text) as f64;
-    let poly_syllab = polysyllable_word_count(text) as f64;
+pub(crate) fn smog_index(stats: &TextStats) -> f64 {
+    let sentences = *stats.n_sentences() as f64;
+    let poly_syllab = stats.polysyllable_word_count() as f64;
     (1.043 * (30.0 * (poly_syllab / sentences)).sqrt()) + 3.1291
 }
 
@@ -181,7 +182,7 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
     }
 
     // SMOG Index
-    let score = smog_index(text);
+    let score = smog_index(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
     let near = score.round() as i32;
@@ -202,7 +203,7 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
     grade.extend([lower, upper, near]);
 
     // Dale_Chall_Readability_Score
-    let score = dale_chall_readability_score(text);
+    let score = dale_chall_readability_score(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
     let near = score.round() as i32;
@@ -218,7 +219,7 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
 
     // Appending Gunning Fog Index
     // TODO: reconsider defaults being py signature only?
-    let score = gunning_fog(text, 3);
+    let score = gunning_fog(stats, 3);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
     let near = score.round() as i32;

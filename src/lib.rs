@@ -66,23 +66,27 @@ mod textstat_rs {
 
     #[pyfunction]
     fn spache_readability(text: &str) -> PyResult<f64> {
-        Ok(formulas::spache_readability(text))
+        let stats = TextStats::new(text);
+        Ok(formulas::spache_readability(&stats))
     }
 
     #[pyfunction]
     fn dale_chall_readability_score(text: &str) -> PyResult<f64> {
-        Ok(formulas::dale_chall_readability_score(text))
+        let stats = TextStats::new(text);
+        Ok(formulas::dale_chall_readability_score(&stats))
     }
 
     #[pyfunction]
     #[pyo3(signature = (text, syllable_threshold=3))]
     fn gunning_fog(text: &str, syllable_threshold: usize) -> PyResult<f64> {
-        Ok(formulas::gunning_fog(text, syllable_threshold))
+        let stats = TextStats::new(text);
+        Ok(formulas::gunning_fog(&stats, syllable_threshold))
     }
 
     #[pyfunction]
     fn smog_index(text: &str) -> PyResult<f64> {
-        Ok(formulas::smog_index(text))
+        let stats = TextStats::new(text);
+        Ok(formulas::smog_index(&stats))
     }
 
     #[pyfunction]
