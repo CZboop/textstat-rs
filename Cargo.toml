@@ -16,3 +16,6 @@ regex = "1.12.3"
 [profile.release]
 lto = "fat"
 codegen-units = 1
+# strip debug symbols from published wheels
+# to reduce size
+strip = true
