@@ -48,6 +48,10 @@ jobs:
           sccache: true
       - name: Run tests
         run: pytest
+      # Compares the hand-written .pyi files against the compiled module, so
+      # stubs can't silently drift from the `#[pyfunction]` signatures.
+      - name: Check type stubs match the compiled module
+        run: python -m mypy.stubtest textstat_rs
 
   # --- tag hygiene: the tag must match the version in Cargo.toml ---------
   # A PyPI version number can never be reused, so publishing under a mismatched

@@ -39,6 +39,7 @@ dev = [
     "textstat>=0.7.13",
     "nltk",
     "maturin",
+    "mypy",
 ]
 
 [tool.maturin]
