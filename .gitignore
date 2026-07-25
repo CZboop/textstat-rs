@@ -79,5 +79,8 @@ results/*.md
 results/*.json
 _cache/
 diagnose_syllables.py
-python/textstat_rs/textstat_rs.pdb
 PARITY.md
+
+# Build artifacts
+*.pdb
+*.pyd
