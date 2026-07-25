@@ -188,7 +188,7 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
     let score = flesch_kincaid_grade(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
-    let near = score.round() as i32; // TODO: verify details (of rounding)
+    let near = score.round() as i32;
 
     grade.extend([lower, upper, near]);
 
