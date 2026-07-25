@@ -1,4 +1,4 @@
-# Texstat-rs
+# Textstat-rs
 Rust port of the textstat textual analysis library, with Python bindings.
 Drop-in replacements for 11 key metrics in US English.
 

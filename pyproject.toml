@@ -4,21 +4,36 @@ build-backend = "maturin"
 
 [project]
 name = "textstat-rs"
+description = "Rust port of the textstat textual analysis library, with Python bindings."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
 classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Text Processing :: Linguistic",
     "Programming Language :: Rust",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dynamic = ["version"]
 dependencies = []
 
+[project.urls]
+Homepage = "https://github.com/CZboop/textstat-rs"
+Repository = "https://github.com/CZboop/textstat-rs"
+Issues = "https://github.com/CZboop/textstat-rs/issues"
+
 [project.optional-dependencies]
 dev = [
-    "pytest",
     "datasets==3.6.0",
     "pytest>=8.3.5",
     "textstat>=0.7.13",
