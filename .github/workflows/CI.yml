@@ -254,3 +254,35 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
+
+  # --- rehearsal: manual dispatch only, publishes to TestPyPI ------------
+  # Same artifacts as the real release, uploaded to a throwaway index so the
+  # whole path can be exercised before a tag exists. Needs its own TestPyPI
+  # account, pending publisher (environment `testpypi`) and GitHub environment.
+  #
+  # `skip-existing` makes a repeat dispatch at the same version a no-op rather
+  # than a failure; TestPyPI still won't let an existing version be replaced,
+  # so genuinely changed code needs a new version number to rehearse again.
+  release-testpypi:
+    name: Release (TestPyPI)
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [linux, musllinux, windows, macos, sdist]
+    environment: testpypi
+    permissions:
+      # OIDC token for TestPyPI trusted publishing
+      id-token: write
+      contents: read
+    steps:
+      - name: Collect all wheels + sdist into dist/
+        uses: actions/download-artifact@v7
+        with:
+          pattern: wheels-*
+          merge-multiple: true
+          path: dist
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
