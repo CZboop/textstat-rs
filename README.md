@@ -4,6 +4,46 @@ Drop-in replacements for 11 key metrics in US English.
 
 **99.98% exact output match, with at least 2.4x-7x speedup, with 2 most sped-up metrics at ~14x and ~79x** based on benchmarking scripts included in repo, running on Wikipedia dataset as a varied, modern text corpus.
 
+## Installation
+
+```bash
+pip install textstat-rs
+```
+
+Pre-release versions need `pip install --pre textstat-rs`.
+
+Requires Python 3.10+. Wheels are built for Linux (x86_64, x86, aarch64, armv7; glibc and musl), macOS (x86_64, arm64) and Windows (x64, arm64). They are `abi3` wheels, so one wheel per platform covers every supported Python version. On other platforms pip falls back to the sdist, which needs a Rust toolchain to build.
+
+## Usage
+
+Import name is `textstat_rs`; every metric takes the text as its first argument.
+
+```python
+import textstat_rs
+
+text = "The cat sat on the mat. It was a sunny day."
+
+textstat_rs.flesch_reading_ease(text)   # 108.96159090909092
+textstat_rs.flesch_kincaid_grade(text)  # -0.5722727272727273
+textstat_rs.text_standard(text)         # '0th and 1st grade'
+```
+
+The exposed metrics match `textstat`'s signatures, so an existing import can be swapped in place:
+
+```python
+import textstat_rs as textstat
+```
+
+Optional arguments are the same as the Python library, other than the exceptions noted below:
+
+```python
+textstat_rs.gunning_fog(text, syllable_threshold=3)
+textstat_rs.linsear_write_formula(text, strict_lower=False, strict_upper=True)
+textstat_rs.reading_time(text, ms_per_char=14.69)
+```
+
+The counting helpers the formulas are built on are exposed too: `syllable_count`, `sentence_count`, `lexicon_count`, `char_count`, `letter_count`, `polysyllabcount`, `miniword_count` and `difficult_words`.
+
 ## Python Comparison
 
 ### Functions

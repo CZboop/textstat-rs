@@ -33,6 +33,13 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
+      # `maturin develop` installs into an active virtualenv, so it needs one to
+      # exist. Exporting VIRTUAL_ENV/PATH keeps it active for later steps too.
+      - name: Create virtualenv
+        run: |
+          python -m venv .venv
+          echo "VIRTUAL_ENV=$PWD/.venv" >> "$GITHUB_ENV"
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
       - name: Build and install
         uses: PyO3/maturin-action@v1
         with:
