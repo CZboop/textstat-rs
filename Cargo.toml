@@ -1,6 +1,6 @@
 [package]
 name = "textstat-rs"
-version = "1.0.0"
+version = "1.0.0-rc.1"
 edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 fancy-regex = "0.18.0"
-pyo3 = "0.28.3"
+pyo3 = { version = "0.28.3", features = ["abi3-py310"] }
 regex = "1.12.3"
 
 [profile.release]
