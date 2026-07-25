@@ -204,8 +204,11 @@ jobs:
           pattern: wheels-*
           merge-multiple: true
           path: dist
+      # `actions/attest` is the generic action and expects a custom predicate;
+      # the build-provenance variant supplies the provenance predicate itself.
+      # PyPI gets its own PEP 740 attestations from the publish step below.
       - name: Generate artifact attestation
-        uses: actions/attest@v4
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: "dist/*"
       - name: Publish to PyPI
