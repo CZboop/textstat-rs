@@ -31,6 +31,14 @@ pub(crate) enum Lang {
 }
 
 impl Lang {
+    /// The locale used when nothing else names one, mirroring textstat's
+    /// `TextStatistics.__lang = "en_US"` class attribute.
+    ///
+    /// Duplicated as a `const` alongside the `Default` derive because a
+    /// `static` initialiser needs a const expression and `Default::default`
+    /// is not const. `default_and_const_agree` keeps the two honest.
+    pub(crate) const DEFAULT: Lang = Lang::EnUs;
+
     /// The canonical locale tag, as textstat would have been handed it.
     pub(crate) fn as_str(self) -> &'static str {
         match self {
@@ -90,6 +98,11 @@ mod tests {
     use super::*;
 
     #[test]
+    fn default_and_const_agree() {
+        assert_eq!(Lang::default(), Lang::DEFAULT);
+    }
+
+    #[test]
     fn exact_tags_resolve() {
         assert_eq!("en_US".parse(), Ok(Lang::EnUs));
         assert_eq!("en_GB".parse(), Ok(Lang::EnGb));
@@ -115,6 +128,9 @@ mod tests {
         // is British, per the quirk above.
         assert_eq!("en_AU".parse(), Ok(Lang::EnGb));
         assert_eq!("en_US_posix".parse(), Ok(Lang::EnUs));
+        // pyphen loops `while '_' in language`, so an empty trailing subtag
+        // just costs one extra turn rather than failing.
+        assert_eq!("en_".parse(), Ok(Lang::EnGb));
     }
 
     #[test]

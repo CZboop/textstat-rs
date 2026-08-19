@@ -1,6 +1,6 @@
 # Textstat-rs
 Rust port of the textstat textual analysis library, with Python bindings.
-Drop-in replacements for 11 key metrics in US English.
+Drop-in replacements for 11 key metrics in British and US English.
 
 **99.98% exact output match, with at least 2.4x-7x speedup, with 2 most sped-up metrics at ~14x and ~79x** based on benchmarking scripts included in repo, running on Wikipedia dataset as a varied, modern text corpus.
 
@@ -43,6 +43,35 @@ textstat_rs.reading_time(text, ms_per_char=14.69)
 ```
 
 The counting helpers the formulas are built on are exposed too: `syllable_count`, `sentence_count`, `lexicon_count`, `char_count`, `letter_count`, `polysyllabcount`, `miniword_count` and `difficult_words`.
+
+### Language
+
+British and American English are both supported. The default is `en_US`, matching `textstat`.
+
+Set it once, the way `textstat` does:
+
+```python
+textstat_rs.set_lang("en_GB")
+textstat_rs.get_lang()                  # 'en_GB'
+textstat_rs.syllable_count("colourful") # 3   (2 under en_US)
+```
+
+Or per call, which `textstat` has no equivalent for. It is keyword-only, and wins over the default:
+
+```python
+textstat_rs.flesch_reading_ease(text, lang="en_GB")
+```
+
+`lang=` is offered only where the locale can change the answer. It reaches exactly one decision — which hyphenation dictionary spells out syllables for words missing from CMUdict — so `char_count`, `lexicon_count`, `sentence_count`, `letter_count`, `miniword_count`, `reading_time`, `mcalpine_eflaw`, `coleman_liau_index` and `automated_readability_index` do not take it, because it would do nothing.
+
+Tags are resolved the way `pyphen` does — lowercased, `-` normalised to `_`, then trailing subtags dropped until something matches — so `en-GB`, `EN_GB` and `en_US_posix` all work.
+
+Four differences from `textstat` worth knowing:
+
+- **Only English is supported.** `textstat` would accept `"fr"` and reach for French coefficients and a French dictionary. textstat-rs vendors only the two English hyphenation dictionaries, so anything that doesn't resolve to `en_US` or `en_GB` raises `ValueError`.
+- **Bad locales fail immediately.** `textstat`'s `set_lang` is a bare assignment, so a typo is accepted and only surfaces later as a `KeyError` from inside `pyphen` — and only once some word actually misses CMUdict, which for a short text may be never.
+- **Bare `"en"` means British.** `pyphen` registers a short name for the first matching file in sorted order, and `hyph_en_GB.dic` sorts before `hyph_en_US.dic`. Kept deliberately, so `en` and `en_AU` get the British dictionary. The default when nothing is set is still `en_US`.
+- **`lang=` is honoured.** `textstat` still accepts `syllable_count(text, lang=...)` but warns and discards it. Here it works.
 
 ## Python Comparison
 
