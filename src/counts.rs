@@ -1,3 +1,4 @@
+use crate::lang::Lang;
 use crate::syllable::count_syllables;
 use crate::tokenize::sentence_list;
 use crate::tokenize::word_list;
@@ -8,10 +9,10 @@ pub(crate) fn char_count(text: &str) -> usize {
     text.chars().filter(|c| !c.is_whitespace()).count()
 }
 
-pub(crate) fn syllable_count(text: &str) -> usize {
+pub(crate) fn syllable_count(text: &str, lang: Lang) -> usize {
     word_list(text, true, false, true, false, false)
         .iter()
-        .map(|w| count_syllables(w))
+        .map(|w| count_syllables(w, lang))
         .sum()
 }
 
@@ -49,12 +50,18 @@ pub(crate) fn words_per_sentence(text: &str) -> f64 {
     word_list(text, true, false, false, false, false).len() as f64 / sentence_count(text) as f64
 }
 
-pub(crate) fn count_difficult_words(text: &str, syllable_threshold: usize, unique: bool) -> usize {
+pub(crate) fn count_difficult_words(
+    text: &str,
+    syllable_threshold: usize,
+    unique: bool,
+    lang: Lang,
+) -> usize {
+    // The easy-word list is shared within en lang `resources/en/easy_words.txt`.
     let easy_words = crate::data::easy_words();
     let words = word_list(text, true, false, false, false, false);
     let difficult = words.iter().filter(|w| {
         let lower = w.to_lowercase();
-        !easy_words.contains(lower.as_str()) && count_syllables(&lower) >= syllable_threshold
+        !easy_words.contains(lower.as_str()) && count_syllables(&lower, lang) >= syllable_threshold
     });
     if unique {
         // textstat dedupes on the original-case token (set built before lowercasing)
@@ -67,10 +74,10 @@ pub(crate) fn count_difficult_words(text: &str, syllable_threshold: usize, uniqu
     }
 }
 
-pub(crate) fn polysyllable_word_count(text: &str) -> usize {
+pub(crate) fn polysyllable_word_count(text: &str, lang: Lang) -> usize {
     word_list(text, true, false, false, false, false)
         .iter()
-        .map(|w| count_syllables(w))
+        .map(|w| count_syllables(w, lang))
         .filter(|c| *c >= 3)
         .count()
 }

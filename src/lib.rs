@@ -2,6 +2,7 @@ use pyo3::prelude::*;
 
 mod counts;
 mod formulas;
+mod lang;
 mod pyphen;
 mod syllable;
 mod tokenize;
@@ -13,38 +14,45 @@ mod stats;
 mod textstat_rs {
     use crate::counts;
     use crate::formulas;
+    use crate::lang::Lang;
     use pyo3::prelude::*;
     use crate::stats::TextStats;
+
+    // TODO: locale is hardcoded to the `en_US` default for now
+    // internals below are already locale-aware, only this line has to change.
+    fn lang() -> Lang {
+        Lang::default()
+    }
 
     // Metrics
     #[pyfunction]
     fn flesch_reading_ease(text: &str) -> PyResult<f64> {
-        let stats = TextStats::new(text);
+        let stats = TextStats::new(text, lang());
         Ok(formulas::flesch_reading_ease(&stats))
     }
 
     #[pyfunction]
     fn flesch_kincaid_grade(text: &str) -> PyResult<f64> {
-        let stats = TextStats::new(text);
+        let stats = TextStats::new(text, lang());
         Ok(formulas::flesch_kincaid_grade(&stats))
     }
 
     #[pyfunction]
     fn automated_readability_index(text: &str) -> PyResult<f64> {
-        let stats = TextStats::new(text);
+        let stats = TextStats::new(text, lang());
         Ok(formulas::automated_readability_index(&stats))
     }
 
     #[pyfunction]
     fn coleman_liau_index(text: &str) -> PyResult<f64> {
-        let stats = TextStats::new(text);
+        let stats = TextStats::new(text, lang());
         Ok(formulas::coleman_liau_index(&stats))
     }
 
     #[pyfunction]
     #[pyo3(signature = (text, strict_lower=false, strict_upper=true))]
     fn linsear_write_formula(text: &str, strict_lower: bool, strict_upper: bool) -> PyResult<f64> {
-        let stats = TextStats::new(text);
+        let stats = TextStats::new(text, lang());
         Ok(formulas::linsear_write_formula(
             &stats,
             strict_lower,
@@ -55,44 +63,44 @@ mod textstat_rs {
     #[pyfunction]
     #[pyo3(signature = (text, ms_per_char=14.69))]
     fn reading_time(text: &str, ms_per_char: f64) -> PyResult<f64> {
-        let stats = TextStats::new(text);
+        let stats = TextStats::new(text, lang());
         Ok(formulas::reading_time(&stats, ms_per_char))
     }
 
     #[pyfunction]
     fn mcalpine_eflaw(text: &str) -> PyResult<f64> {
-        let stats = TextStats::new(text);
+        let stats = TextStats::new(text, lang());
         Ok(formulas::mcalpine_eflaw(&stats))
     }
 
     #[pyfunction]
     fn spache_readability(text: &str) -> PyResult<f64> {
-        let stats = TextStats::new(text);
+        let stats = TextStats::new(text, lang());
         Ok(formulas::spache_readability(&stats))
     }
 
     #[pyfunction]
     fn dale_chall_readability_score(text: &str) -> PyResult<f64> {
-        let stats = TextStats::new(text);
+        let stats = TextStats::new(text, lang());
         Ok(formulas::dale_chall_readability_score(&stats))
     }
 
     #[pyfunction]
     #[pyo3(signature = (text, syllable_threshold=3))]
     fn gunning_fog(text: &str, syllable_threshold: usize) -> PyResult<f64> {
-        let stats = TextStats::new(text);
+        let stats = TextStats::new(text, lang());
         Ok(formulas::gunning_fog(&stats, syllable_threshold))
     }
 
     #[pyfunction]
     fn smog_index(text: &str) -> PyResult<f64> {
-        let stats = TextStats::new(text);
+        let stats = TextStats::new(text, lang());
         Ok(formulas::smog_index(&stats))
     }
 
     #[pyfunction]
     fn text_standard(text: &str) -> PyResult<String> {
-        let stats = TextStats::new(text);
+        let stats = TextStats::new(text, lang());
         Ok(formulas::text_standard(text, &stats))
     }
 
@@ -100,7 +108,7 @@ mod textstat_rs {
     // (TODO: potentially remove as exposed mod funcs post-dev)
     #[pyfunction]
     fn syllable_count(text: &str) -> PyResult<usize> {
-        Ok(counts::syllable_count(text))
+        Ok(counts::syllable_count(text, lang()))
     }
 
     #[pyfunction]
@@ -144,7 +152,7 @@ mod textstat_rs {
 
     #[pyfunction]
     fn polysyllabcount(text: &str) -> PyResult<usize> {
-        Ok(counts::polysyllable_word_count(text))
+        Ok(counts::polysyllable_word_count(text, lang()))
     }
 
     #[pyfunction]
@@ -156,7 +164,12 @@ mod textstat_rs {
     #[pyfunction]
     #[pyo3(signature = (text, syllable_threshold=2, unique=true))]
     fn difficult_words(text: &str, syllable_threshold: usize, unique: bool) -> PyResult<usize> {
-        Ok(counts::count_difficult_words(text, syllable_threshold, unique))
+        Ok(counts::count_difficult_words(
+            text,
+            syllable_threshold,
+            unique,
+            lang(),
+        ))
     }
 }
 

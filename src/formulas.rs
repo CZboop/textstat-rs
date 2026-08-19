@@ -100,7 +100,7 @@ pub(crate) fn linsear_write_formula(
     let mut easy_word = 0;
     let mut difficult_word = 0;
     for word in words_list.iter() {
-        let n_syll = count_syllables(word);
+        let n_syll = count_syllables(word, stats.lang());
         if n_syll >= 3 {
             difficult_word += 1;
         } else {
