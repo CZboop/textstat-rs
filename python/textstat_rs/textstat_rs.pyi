@@ -29,6 +29,7 @@ __all__ = [
     "set_lang",
     "smog_index",
     "spache_readability",
+    "supported_langs",
     "syllable_count",
     "text_standard",
 ]
@@ -37,6 +38,7 @@ __all__ = [
 
 def set_lang(lang: str) -> None: ...
 def get_lang() -> str: ...
+def supported_langs() -> list[str]: ...
 
 # Metrics
 

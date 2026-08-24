@@ -23,6 +23,53 @@ def test_default_is_american():
     assert textstat_rs.get_lang() == "en_US"
 
 
+# --- supported_langs ------------------------------------------------------
+
+
+def test_supported_langs_is_the_canonical_list():
+    assert sorted(textstat_rs.supported_langs()) == ["en_GB", "en_US"]
+
+
+def test_every_advertised_lang_is_accepted():
+    """The list and reality cannot drift apart.
+
+    `supported_langs` is what callers enumerate instead of hardcoding tags --
+    the benchmark harness among them -- so advertising a locale that `set_lang`
+    rejects would be worse than not advertising it at all.
+    """
+    for tag in textstat_rs.supported_langs():
+        textstat_rs.set_lang(tag)
+        assert textstat_rs.get_lang() == tag
+
+
+def test_advertised_langs_are_canonical():
+    """Each tag is already in the form `get_lang` reports it back as.
+
+    Rules out listing an alias like `en` that resolves to something else.
+    """
+    for tag in textstat_rs.supported_langs():
+        textstat_rs.set_lang(tag)
+        assert textstat_rs.get_lang() == tag, f"{tag} is an alias, not canonical"
+
+
+def test_default_is_advertised():
+    assert textstat_rs.get_lang() in textstat_rs.supported_langs()
+
+
+def test_locale_sensitive_functions_accept_every_advertised_lang():
+    for tag in textstat_rs.supported_langs():
+        for fn in LOCALE_SENSITIVE:
+            fn(DIVERGENT, lang=tag)
+
+
+def test_unsupported_error_names_the_supported_langs():
+    """The message is built from the same list, so it can't go stale."""
+    with pytest.raises(ValueError) as exc:
+        textstat_rs.set_lang("fr")
+    for tag in textstat_rs.supported_langs():
+        assert tag in str(exc.value)
+
+
 def test_set_lang_round_trips():
     textstat_rs.set_lang("en_GB")
     assert textstat_rs.get_lang() == "en_GB"

@@ -56,7 +56,13 @@ textstat_rs.get_lang()                  # 'en_GB'
 textstat_rs.syllable_count("colourful") # 3   (2 under en_US)
 ```
 
-Or per call, which `textstat` has no equivalent for. It is keyword-only, and wins over the default:
+`supported_langs()` returns canonical tags, to allow enumerating locales rather than hardcoding them:
+
+```python
+textstat_rs.supported_langs()          # ['en_US', 'en_GB']
+```
+
+You can also set the locale per call. It is keyword-only, and overrides over the default:
 
 ```python
 textstat_rs.flesch_reading_ease(text, lang="en_GB")

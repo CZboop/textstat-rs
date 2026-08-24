@@ -39,6 +39,14 @@ impl Lang {
     /// is not const. `default_and_const_agree` keeps the two honest.
     pub(crate) const DEFAULT: Lang = Lang::EnUs;
 
+    /// Every locale this crate can score in.
+    ///
+    /// The one place the set is written down: all references
+    /// read it from here rather than repeating the tags. Adding a locale means
+    /// adding a variant, a dictionary and an entry here - nothing else has a
+    /// list to fall out of step with.
+    pub(crate) const ALL: &'static [Lang] = &[Lang::EnUs, Lang::EnGb];
+
     /// The canonical locale tag, as textstat would have been handed it.
     pub(crate) fn as_str(self) -> &'static str {
         match self {
@@ -100,6 +108,33 @@ mod tests {
     #[test]
     fn default_and_const_agree() {
         assert_eq!(Lang::default(), Lang::DEFAULT);
+    }
+
+    #[test]
+    fn all_lists_every_variant() {
+        // Adding a variant to `Lang` makes this arm non-exhaustive
+        // and the test stops compiling
+        // Const slice cannot be checked for completeness otherwise
+        for lang in Lang::ALL {
+            match lang {
+                Lang::EnUs | Lang::EnGb => {}
+            }
+        }
+        assert!(Lang::ALL.contains(&Lang::DEFAULT), "the default must be listed");
+    }
+
+    #[test]
+    fn every_listed_tag_round_trips() {
+        // `supported_langs` hands these tags to callers, so each has to parse
+        // back to the variant it came from
+        for &lang in Lang::ALL {
+            assert_eq!(lang.as_str().parse(), Ok(lang), "{}", lang.as_str());
+        }
+        let mut tags: Vec<&str> = Lang::ALL.iter().map(|l| l.as_str()).collect();
+        tags.sort_unstable();
+        let len = tags.len();
+        tags.dedup();
+        assert_eq!(tags.len(), len, "duplicate tag in Lang::ALL");
     }
 
     #[test]

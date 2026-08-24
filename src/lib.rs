@@ -64,11 +64,15 @@ mod textstat_rs {
     /// reject at the boundary instead; see PARITY.md.
     fn parse_lang(tag: &str) -> PyResult<Lang> {
         tag.parse().map_err(|UnsupportedLang(tag)| {
+            // Built from `Lang::ALL`, so a new locale
+            // shows up in the error automatically
+            let supported = Lang::ALL
+                .iter()
+                .map(|l| l.as_str())
+                .collect::<Vec<_>>()
+                .join(", ");
             PyValueError::new_err(format!(
-                "unsupported language {tag:?}: textstat-rs vendors only the \
-                 English hyphenation dictionaries ({}, {})",
-                Lang::EnUs.as_str(),
-                Lang::EnGb.as_str(),
+                "unsupported language {tag:?}: textstat-rs supports {supported}"
             ))
         })
     }
@@ -96,6 +100,19 @@ mod textstat_rs {
     #[pyfunction]
     fn get_lang() -> &'static str {
         default_lang().as_str()
+    }
+
+    /// Every locale `set_lang` and `lang=` accept, as canonical tags.
+    ///
+    /// No textstat equivalent -- there the supported set is whatever pyphen
+    /// happens to ship, discoverable only by trying one. Exposing it lets a
+    /// caller enumerate locales instead of hardcoding them, which is what the
+    /// benchmark harness does. Other tags may still resolve to one of these by
+    /// truncation (`en_AU` -> `en_GB`); this is the canonical list, not the
+    /// accepted one.
+    #[pyfunction]
+    fn supported_langs() -> Vec<&'static str> {
+        Lang::ALL.iter().map(|l| l.as_str()).collect()
     }
 
     // Metrics
