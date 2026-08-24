@@ -1,22 +1,32 @@
 //! Port of the parts of `pyphen` that textstat actually uses.
 //!
-//! textstat only ever calls `Pyphen(lang="en_US").positions(word)` and takes
+//! textstat only ever calls `Pyphen(lang=...).positions(word)` and takes
 //! `len(positions) + 1` as the syllable count for out-of-vocabulary words. That
 //! means we can skip pyphen's `DataInt` / `AlternativeParser` machinery: those
 //! only describe *how* to break a word at a position, never *where* the breaks
-//! are. The odd/even value at each position is identical either way.
+//! are. The odd/even value at each position is identical either way. (Neither
+//! English dictionary contains a nonstandard alternative anyway — no line in
+//! either file has both a `/` and an `=`.)
 //!
 //! So this is just: parse the Liang patterns out of the `.dic` file, then
 //! max-merge them over the word and keep the odd positions.
+//!
+//! The two English dictionaries are structurally identical — same header keys,
+//! same UTF-8 encoding, both carrying apostrophes and Unicode `ﬁ`-ligatures —
+//! so the locale only picks which pattern set to run, never how to parse it.
 
+use crate::lang::Lang;
 use regex::Regex;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
-static HYPH_RAW: &str = include_str!("data/hyph_en_US.dic");
-
 /// pyphen's `left`/`right` defaults: a break must leave at least this many
 /// characters on each side of the word.
+///
+/// These stay 2 for both locales. Both `.dic` files declare `RIGHTHYPHENMIN 3`
+/// in their headers, but pyphen never reads that — it takes `left`/`right` from
+/// its constructor arguments and lists the header keys among `ignored`, and
+/// textstat constructs `Pyphen(lang=lang)` without overriding either.
 const LEFT: isize = 2;
 const RIGHT: isize = 2;
 
@@ -38,11 +48,12 @@ struct HyphDict {
     maxlen: usize,
 }
 
-static HYPH_DICT: LazyLock<HyphDict> = LazyLock::new(|| {
+/// Parse the Liang patterns out of one `hyph_*.dic` file.
+fn parse_dict(raw: &str) -> HyphDict {
     let mut patterns: HashMap<String, (usize, Vec<u8>)> = HashMap::new();
 
     // Line 1 is the encoding declaration.
-    for line in HYPH_RAW.lines().skip(1) {
+    for line in raw.lines().skip(1) {
         let line = line.trim();
         if line.is_empty() || IGNORED_PREFIXES.iter().any(|p| line.starts_with(p)) {
             continue;
@@ -94,14 +105,25 @@ static HYPH_DICT: LazyLock<HyphDict> = LazyLock::new(|| {
         .expect("the dictionary is not empty");
 
     HyphDict { patterns, maxlen }
-});
+}
+
+// Parsed independently and on demand, mirroring pyphen's per-file `hdcache`:
+// scoring only ever in one locale never pays to parse the other's ~107 KB of
+// patterns.
+static HYPH_EN_US: LazyLock<HyphDict> =
+    LazyLock::new(|| parse_dict(include_str!("data/hyph_en_US.dic")));
+static HYPH_EN_GB: LazyLock<HyphDict> =
+    LazyLock::new(|| parse_dict(include_str!("data/hyph_en_GB.dic")));
 
 /// Positions in `word` where a hyphen may be inserted, as `char` offsets.
 ///
 /// Mirrors `Pyphen.positions`: the Liang max-merge over `HyphDict.positions`,
 /// then dropping breaks that sit too close to either end of the word.
-pub(crate) fn positions(word: &str) -> Vec<usize> {
-    let dict = &*HYPH_DICT;
+pub(crate) fn positions(word: &str, lang: Lang) -> Vec<usize> {
+    let dict: &HyphDict = match lang {
+        Lang::EnUs => &HYPH_EN_US,
+        Lang::EnGb => &HYPH_EN_GB,
+    };
 
     // Python indexes `str` by character, so we must too — otherwise a non-ASCII
     // word would produce byte offsets and diverge.
@@ -140,4 +162,37 @@ pub(crate) fn positions(word: &str) -> Vec<usize> {
         .filter(|&p| LEFT <= p && p <= word_len - RIGHT)
         .map(|p| p as usize)
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Expectations are pinned to real pyphen 0.17.2 output:
+    /// `Pyphen(lang=...).positions(word)` for each locale.
+    const CASES: &[(&str, &[usize], &[usize])] = &[
+        // word           en_US            en_GB
+        ("powerhouse", &[3, 5], &[5]),
+        ("molecules", &[3, 4], &[2]),
+        ("colour", &[], &[3]),
+        ("organisation", &[2, 5, 6, 8], &[2, 5, 8]),
+        ("analyse", &[2, 3], &[3]),
+        ("photosynthesis", &[3, 5, 8, 11], &[3, 5, 8, 12]),
+        ("readability", &[4, 8, 9], &[4, 6, 8]),
+    ];
+
+    #[test]
+    fn matches_pyphen_per_locale() {
+        for &(word, us, gb) in CASES {
+            assert_eq!(positions(word, Lang::EnUs), us, "{word} (en_US)");
+            assert_eq!(positions(word, Lang::EnGb), gb, "{word} (en_GB)");
+        }
+    }
+
+    /// The locales really do disagree — guards against both statics ending up
+    /// pointed at the same file.
+    #[test]
+    fn locales_are_not_the_same_dictionary() {
+        assert_ne!(positions("colour", Lang::EnUs), positions("colour", Lang::EnGb));
+    }
 }
