@@ -140,7 +140,7 @@ Metrics returning a grade band rather than a number are compared as exact string
 
 </details>
 
-_Generated from `9f85b7d` on 2026-08-24, python 3.12.4 vs textstat 0.7.13, on Windows-11-10.0.26200-SP0._
+_Generated from `dc1a373` on 2026-08-24, python 3.12.4 vs textstat 0.7.13._
 <!-- bench:parity:end -->
 
 ### Performance
@@ -150,21 +150,21 @@ One call per metric over 100 concatenated Wikipedia articles (0.46 MB), median o
 
 | metric | textstat-rs (ms) | textstat (ms) | speedup |
 | --- | --- | --- | --- |
-| flesch_reading_ease | 39.68 | 145.02 | 3.65x |
-| flesch_kincaid_grade | 34.37 | 149.34 | 4.35x |
-| automated_readability_index | 16.99 | 47.21 | 2.78x |
-| coleman_liau_index | 14.81 | 60.34 | 4.07x |
-| dale_chall_readability_score | 29.23 | 180.36 | 6.17x |
-| gunning_fog | 28.62 | 192.56 | 6.73x |
-| smog_index | 28.09 | 204.73 | 7.29x |
-| linsear_write_formula | 0.05 | 3.79 | 79.81x |
-| mcalpine_eflaw | 18.05 | 43.65 | 2.42x |
-| spache_readability | 30.37 | 192.59 | 6.34x |
-| reading_time | 0.91 | 13.23 | 14.58x |
+| flesch_reading_ease | 39.29 | 149.60 | 3.81x |
+| flesch_kincaid_grade | 36.45 | 148.43 | 4.07x |
+| automated_readability_index | 18.87 | 51.10 | 2.71x |
+| coleman_liau_index | 13.68 | 59.91 | 4.38x |
+| dale_chall_readability_score | 28.11 | 186.25 | 6.63x |
+| gunning_fog | 28.72 | 187.38 | 6.52x |
+| smog_index | 27.78 | 207.86 | 7.48x |
+| linsear_write_formula | 0.04 | 4.16 | 107.98x |
+| mcalpine_eflaw | 18.61 | 42.15 | 2.26x |
+| spache_readability | 27.91 | 193.68 | 6.94x |
+| reading_time | 0.79 | 12.80 | 16.27x |
 
-On top of that, the first call in a fresh process pays a one-off load of the syllable and word-list resources: up to 32 ms for `textstat-rs` against 455 ms for `textstat`.
+On top of that, the first call in a fresh process pays a one-off load of the syllable and word-list resources: up to 34 ms for `textstat-rs` against 361 ms for `textstat`.
 
-_Generated from `5d3aab1` on 2026-07-25, python 3.12.4 vs textstat 0.7.13, on Windows-11-10.0.26200-SP0._
+_Generated from `dc1a373` on 2026-08-24, python 3.12.4 vs textstat 0.7.13._
 <!-- bench:perf:end -->
 
 ## Third-party data
