@@ -112,7 +112,17 @@ Four differences from `textstat` worth knowing:
 ### Parity
 
 <!-- bench:parity:start -->
-Scores are compared against `textstat` over 1000 Wikipedia articles (up to 5000 chars each): **99.98% of 11000 comparisons match exactly**, and the largest disagreement anywhere is 0.049566.
+Scores are compared against `textstat` over 1000 Wikipedia articles (up to 5000 chars each), across `en_US` and `en_GB`: **99.98% of 22000 comparisons match exactly**, and the largest disagreement anywhere is 0.049566.
+
+| locale | comparisons | exact match | max delta |
+| --- | --- | --- | --- |
+| en_US | 11000 | 99.98% | 0.049566 |
+| en_GB | 11000 | 99.97% | 0.049566 |
+
+Metrics returning a grade band rather than a number are compared as exact strings: `text_standard` matches exactly 1000/1000 in `en_US`, 1000/1000 in `en_GB`.
+
+<details>
+<summary>Per metric (en_US)</summary>
 
 | metric | avg delta | max delta |
 | --- | --- | --- |
@@ -128,7 +138,9 @@ Scores are compared against `textstat` over 1000 Wikipedia articles (up to 5000 
 | spache_readability | 0.000011 | 0.010657 |
 | reading_time | 0.000000 | 0.000000 |
 
-_Generated from `5d3aab1` on 2026-07-25, python 3.12.4 vs textstat 0.7.13, on Windows-11-10.0.26200-SP0._
+</details>
+
+_Generated from `9f85b7d` on 2026-08-24, python 3.12.4 vs textstat 0.7.13, on Windows-11-10.0.26200-SP0._
 <!-- bench:parity:end -->
 
 ### Performance

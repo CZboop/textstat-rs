@@ -42,6 +42,35 @@ def _cache_paths(root: str, n: int, max_chars: int) -> list[Path]:
     return paths
 
 
+def _larger_cached(root: str, n: int, max_chars: int) -> list[tuple[str, str]] | None:
+    """Smallest cached corpus for this language holding at least `n` samples.
+
+    Smallest rather than any, so slicing 20 out of a cached 50 does not load a
+    1000-article pickle to throw most of it away.
+    """
+    best: tuple[int, Path] | None = None
+    for path in CACHE.glob(f"wikipedia_*_{max_chars}.pkl"):
+        parts = path.stem.split("_")
+        # `wikipedia_<root>_<n>_<max_chars>`, or the legacy English
+        # `wikipedia_<n>_<max_chars>`. Matched field by field rather than by
+        # glob: `wikipedia_*_5000.pkl` also matches another language's cache,
+        # and slicing French articles into an English run would be silent.
+        if len(parts) == 4 and parts[1] == root and parts[2].isdigit():
+            size = int(parts[2])
+        elif len(parts) == 3 and root == "en" and parts[1].isdigit():
+            size = int(parts[1])
+        else:
+            continue
+        # Smallest sufficient, so slicing 20 out of a cached 50 does not load a
+        # 1000-article pickle to throw most of it away.
+        if size >= n and (best is None or size < best[0]):
+            best = (size, path)
+
+    if best is None:
+        return None
+    return pickle.loads(best[1].read_bytes())
+
+
 def corpus_for(
     lang: str = "en_US", n: int = 1000, max_chars: int = 5000
 ) -> list[tuple[str, str]]:
@@ -65,6 +94,13 @@ def corpus_for(
     for path in paths:
         if path.exists():
             return pickle.loads(path.read_bytes())
+
+    # No exact-size cache. A larger one for the same language slices down
+    # Without this, `--samples 20` triggers a
+    # download purely because nobody had asked for that size before.
+    bigger = _larger_cached(root, n, max_chars)
+    if bigger is not None:
+        return bigger[:n]
 
     # Imported lazily - cached corpus doesn't require `datasets` 
     # to be installed

@@ -13,7 +13,9 @@ extension does no such caching, so its samples run in one process.
 import multiprocessing as mp
 import statistics
 import time
-from bench.corpora import wikipedia_samples
+import textstat_rs
+
+from bench.corpora import corpus_for
 from bench.report import write_report
 
 # Per-metric time cap on the python side. Some py metrics are very slow on
@@ -140,6 +142,49 @@ def measure(metric_name, big_text) -> dict:
     }
 
 
+def _lazy_worker(order, word, q):
+    """First syllable_count in each locale, in one fresh process, in order."""
+    import textstat_rs
+
+    out = []
+    for lang in order:
+        t0 = time.perf_counter()
+        textstat_rs.syllable_count(word, lang=lang)
+        out.append({"lang": lang, "first_call_ms": (time.perf_counter() - t0) * 1000})
+    q.put(out)
+
+
+def dictionary_isolation(langs: list[str]) -> dict:
+    """Evidence that each locale's dictionary is parsed lazily and separately.
+
+    `pyphen.rs` keeps one `LazyLock` per dictionary and claims that scoring in
+    one locale never pays to parse the other's ~107 KB of patterns. That is not
+    directly observable from Python, but its consequence is: if the two are
+    parsed independently and on demand, the *second* locale used in a process
+    pays a fresh, measurable parse on its first call. Were they parsed together
+    up front, that second first-call would be free.
+
+    So `sequential[0]` covers cmudict plus one dictionary, and `sequential[1:]`
+    is the marginal cost of each additional dictionary -- which is what a
+    single-locale process never pays.
+    """
+    # Not in cmudict, so the lookup has to fall through to pyphen.
+    word = "zzyzxvwgqk"
+    sequential = _run_worker(_lazy_worker, (langs, word), PY_TIMEOUT_SECONDS)
+    standalone = {
+        lang: _run_worker(_lazy_worker, ([lang], word), PY_TIMEOUT_SECONDS)
+        for lang in langs
+    }
+    return {
+        "word": word,
+        "sequential": sequential,
+        "standalone": {
+            lang: (res[0]["first_call_ms"] if res else None)
+            for lang, res in standalone.items()
+        },
+    }
+
+
 def format_cells(row: dict) -> dict:
     """Display strings for one row, shared by the terminal table and markdown."""
 
@@ -165,12 +210,19 @@ def format_cells(row: dict) -> dict:
 
 
 def main():
-    samples = wikipedia_samples(CORPUS_ARTICLES)
+    # Timings are taken in the default locale only. The locale picks which
+    # hyphenation dictionary backs the syllable fallback, and the two are the
+    # same size and shape, so running the whole suite per locale would roughly
+    # double the runtime for numbers expected to match. What *is* locale
+    # specific -- the cost of loading each dictionary -- is measured separately
+    # by `dictionary_isolation` below.
+    lang = textstat_rs.get_lang()
+    samples = corpus_for(lang, CORPUS_ARTICLES)
     big_text = "\n\n".join(t for _, t in samples)
     n_chars = len(big_text)
 
     print(
-        f"Corpus: {len(samples)} articles, {n_chars/1e6:.2f} MB  "
+        f"Corpus: {len(samples)} articles, {n_chars/1e6:.2f} MB, lang {lang}  "
         f"(median of {SAMPLES}, py timeout/metric: {PY_TIMEOUT_SECONDS}s)"
     )
     header = (
@@ -191,6 +243,11 @@ def main():
             flush=True,  # so a redirected run streams instead of dumping at the end
         )
 
+    isolation = dictionary_isolation(textstat_rs.supported_langs())
+    print("\nFirst syllable_count per locale, one process, in order:")
+    for entry in isolation["sequential"] or []:
+        print(f"  {entry['lang']:<8} {entry['first_call_ms']:>8.1f} ms")
+
     out = write_report(
         "perf",
         {
@@ -199,9 +256,11 @@ def main():
                 "articles": len(samples),
                 "chars": n_chars,
             },
+            "lang": lang,
             "py_timeout_seconds": PY_TIMEOUT_SECONDS,
             "samples": SAMPLES,
             "rows": rows,
+            "dictionary_isolation": isolation,
         },
     )
     print(f"\nwrote {out}")
