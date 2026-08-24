@@ -1,3 +1,4 @@
+use crate::lang::Lang;
 use crate::syllable::count_syllables;
 use std::cell::OnceCell;
 // lazy init - in case of stats that don't need everything computed
@@ -6,6 +7,10 @@ use crate::tokenize::word_list;
 
 pub(crate) struct TextStats<'a> {
     text: &'a str,
+    /// Fixed at construction, never per-method: the syllable-derived `OnceCell`s
+    /// below cache their first answer, so a locale that could change mid-life
+    /// would let a British call be served an American count.
+    lang: Lang,
     words: OnceCell<Vec<String>>,
     words_lower: OnceCell<Vec<String>>,
     words_no_apostrophe: OnceCell<Vec<String>>,
@@ -19,9 +24,10 @@ pub(crate) struct TextStats<'a> {
 }
 
 impl<'a> TextStats<'a> {
-    pub fn new(text: &'a str) -> Self {
+    pub fn new(text: &'a str, lang: Lang) -> Self {
         Self {
             text,
+            lang,
             words: OnceCell::new(),
             words_lower: OnceCell::new(),
             words_no_apostrophe: OnceCell::new(),
@@ -37,6 +43,12 @@ impl<'a> TextStats<'a> {
 
     pub fn text(&self) -> &str {
         self.text
+    }
+
+    /// The locale these stats were built for, for formulas that count syllables
+    /// themselves instead of going through a cached field.
+    pub fn lang(&self) -> Lang {
+        self.lang
     }
 
     pub fn words(&self) -> &[String] {
@@ -64,7 +76,8 @@ impl<'a> TextStats<'a> {
     }
 
     pub fn n_syllables(&self) -> &usize {
-        self.n_syllables.get_or_init(|| syllable_count(self.text))
+        self.n_syllables
+            .get_or_init(|| syllable_count(self.text, self.lang))
     }
 
     pub fn n_chars(&self) -> &usize {
@@ -105,7 +118,8 @@ impl<'a> TextStats<'a> {
             .iter()
             .filter(|w| {
                 let lower = w.to_lowercase();
-                !easy_words.contains(lower.as_str()) && count_syllables(&lower) >= syllable_threshold
+                !easy_words.contains(lower.as_str())
+                    && count_syllables(&lower, self.lang) >= syllable_threshold
             })
             .count()
     }
@@ -114,7 +128,7 @@ impl<'a> TextStats<'a> {
         self.words()
         .iter()
         // TODO: can this use internal syllable count?
-        .map(|w| count_syllables(w))
+        .map(|w| count_syllables(w, self.lang))
         .filter(|c| *c >= 3)
         .count()
 }

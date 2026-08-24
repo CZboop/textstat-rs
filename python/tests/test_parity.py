@@ -10,6 +10,37 @@ SAMPLE_TEXTS = [
     "Mitochondria is the powerhouse of the cell.",
 ]
 
+LANGS = ["en_US", "en_GB"]
+
+
+@pytest.fixture(autouse=True, params=LANGS)
+def lang(request):
+    """Run every parity test in this module once per supported locale.
+
+    Autouse and parametrised, so the tests below need no changes: each one
+    doubles, and both libraries are switched underneath it. Both `set_lang`
+    calls write process-wide state -- textstat's onto a module-level
+    `TextStatistics` singleton, ours onto a `RwLock` in the extension -- so
+    restoring the default afterwards is not optional. Leaking `en_GB` out of
+    here would silently reinterpret every later test in the session.
+    """
+    textstat.set_lang(request.param)
+    textstat_rs.set_lang(request.param)
+    yield request.param
+    textstat.set_lang("en_US")
+    textstat_rs.set_lang("en_US")
+
+
+def test_locales_are_distinguishable(lang):
+    """Guard against the parametrisation above being vacuous.
+
+    Every other test here would still pass if `set_lang` were a no-op and both
+    libraries always scored American English. This is the one that notices.
+    """
+    us = textstat_rs.syllable_count("colourful behaviour", lang="en_US")
+    gb = textstat_rs.syllable_count("colourful behaviour", lang="en_GB")
+    assert us != gb
+
 
 # Parity tests: Compare original and ported outputs for same inputs
 
@@ -103,3 +134,7 @@ def test_text_standard_parity(text):
     ]
     assert ts_grade_upper == pytest.approx(rs_grade_upper, abs=0.0)
     assert ts_grade_lower == pytest.approx(rs_grade_lower, abs=0.0)
+
+    # asserting against both int grade and full string
+    # int feeds max delta, str ensures suffixes are also the same
+    assert textstat_rs.text_standard(text) == textstat.text_standard(text)

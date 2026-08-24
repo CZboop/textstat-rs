@@ -1,3 +1,4 @@
+use crate::lang::Lang;
 use crate::pyphen;
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -26,7 +27,7 @@ static CMU: LazyLock<HashMap<String, usize>> = LazyLock::new(|| {
     map
 });
 
-pub(crate) fn count_syllables(text: &str) -> usize {
+pub(crate) fn count_syllables(text: &str, lang: Lang) -> usize {
     if text.len() == 0 {
         return 0;
     }
@@ -35,10 +36,15 @@ pub(crate) fn count_syllables(text: &str) -> usize {
     if lower.is_empty() {
         return 0;
     }
+    // CMUdict is deliberately not locale-sensitive: textstat's `get_cmudict`
+    // keys on the language *root*, so en_GB and en_US share one pronunciation
+    // dictionary. Only the fallback below varies by locale, which is why a word
+    // in CMUdict scores the same in both — the British and American pattern
+    // files disagree about e.g. `process`, but neither is ever consulted for it.
     if let Some(&n) = CMU.get(&lower) {
         return n.max(1);
     }
 
     // out of vocab fallback - hyphenation points + 1, as textstat does via pyphen
-    pyphen::positions(&lower).len() + 1
+    pyphen::positions(&lower, lang).len() + 1
 }

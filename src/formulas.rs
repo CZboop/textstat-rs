@@ -100,7 +100,7 @@ pub(crate) fn linsear_write_formula(
     let mut easy_word = 0;
     let mut difficult_word = 0;
     for word in words_list.iter() {
-        let n_syll = count_syllables(word);
+        let n_syll = count_syllables(word, stats.lang());
         if n_syll >= 3 {
             difficult_word += 1;
         } else {
@@ -188,7 +188,7 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
     let score = flesch_kincaid_grade(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
-    let near = score.round() as i32;
+    let near = score.round_ties_even() as i32;
 
     grade.extend([lower, upper, near]);
 
@@ -217,28 +217,28 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
     let score = smog_index(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
-    let near = score.round() as i32;
+    let near = score.round_ties_even() as i32;
     grade.extend([lower, upper, near]);
 
     // Coleman_Liau_Index
     let score = coleman_liau_index(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
-    let near = score.round() as i32;
+    let near = score.round_ties_even() as i32;
     grade.extend([lower, upper, near]);
 
     // Automated_Readability_Index
     let score = automated_readability_index(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
-    let near = score.round() as i32;
+    let near = score.round_ties_even() as i32;
     grade.extend([lower, upper, near]);
 
     // Dale_Chall_Readability_Score
     let score = dale_chall_readability_score(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
-    let near = score.round() as i32;
+    let near = score.round_ties_even() as i32;
     grade.extend([lower, upper, near]);
 
     // Linsear_Write_Formula
@@ -246,7 +246,7 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
     let score = linsear_write_formula(stats, false, true);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
-    let near = score.round() as i32;
+    let near = score.round_ties_even() as i32;
     grade.extend([lower, upper, near]);
 
     // Appending Gunning Fog Index
@@ -254,7 +254,7 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
     let score = gunning_fog(stats, 3);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
-    let near = score.round() as i32;
+    let near = score.round_ties_even() as i32;
     grade.extend([lower, upper, near]);
 
     // Finding the Readability Consensus based on all the above tests
@@ -279,20 +279,47 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
 }
 
 fn ordinal_suffix(number: i32) -> &'static str {
-    let ordinal_value = match number % 10 {
-        1 => "st",
-        2 => "nd",
-        3 => "rd",
-        _ => "th",
-    };
-    let teen_value = match number % 100 {
-        11 => "th",
-        12 => "th",
-        13 => "th",
-        _ => "none",
-    };
-    if teen_value == "none" {
-        return ordinal_value;
+    match number % 100 {
+        11 | 12 | 13 => "th",
+        _ => match number % 10 {
+            1 => "st",
+            2 => "nd",
+            3 => "rd",
+            _ => "th",
+        },
     }
-    ordinal_value
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const SUFFIXES: &[(i32, &str)] = &[
+        (0, "th"), (1, "st"), (2, "nd"), (3, "rd"), (4, "th"), (5, "th"),
+        (6, "th"), (7, "th"), (8, "th"), (9, "th"), (10, "th"), (11, "th"),
+        (12, "th"), (13, "th"), (14, "th"), (15, "th"), (16, "th"), (17, "th"),
+        (18, "th"), (19, "th"), (20, "th"), (21, "st"), (22, "nd"), (23, "rd"),
+        (24, "th"), (25, "th"), (26, "th"), (27, "th"), (28, "th"), (29, "th"),
+        (30, "th"), (100, "th"), (101, "st"), (111, "th"), (112, "th"),
+        (113, "th"), (121, "st"), (211, "th"), (1013, "th"),
+    ];
+
+    #[test]
+    fn ordinal_suffix_matches_textstat() {
+        for &(n, expected) in SUFFIXES {
+            assert_eq!(ordinal_suffix(n), expected, "{n}");
+        }
+    }
+
+    /// Regression scenario/previous bug
+    #[test]
+    fn teens_are_not_given_last_digit_suffixes() {
+        for n in 11..=13 {
+            assert_eq!(ordinal_suffix(n), "th", "{n}");
+        }
+        assert_eq!(ordinal_suffix(1), "st");
+        assert_eq!(ordinal_suffix(21), "st");
+        assert_eq!(ordinal_suffix(2), "nd");
+        assert_eq!(ordinal_suffix(22), "nd");
+    }
 }
