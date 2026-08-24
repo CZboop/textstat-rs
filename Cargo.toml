@@ -2,6 +2,9 @@
 name = "textstat-rs"
 version = "1.0.0"
 edition = "2024"
+# Our code only. The vendored data in `src/data/` has its own terms; see the
+# notices listed next to `license-files` in pyproject.toml.
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]

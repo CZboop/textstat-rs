@@ -7,7 +7,16 @@ name = "textstat-rs"
 description = "Rust port of the textstat textual analysis library, with Python bindings."
 readme = "README.md"
 license = "MIT"
-license-files = ["LICENSE"]
+# The MIT license covers code in this package
+# Third party data in src/data has it's license preserved
+# More information in README.md
+license-files = [
+    "LICENSE",
+    "src/data/cmudict-LICENSE.txt",
+    "src/data/pyphen-LICENSE.txt",
+    "src/data/README_hyph_en_US.txt",
+    "src/data/README_hyph_en_GB.txt",
+]
 requires-python = ">=3.10"
 classifiers = [
     "Development Status :: 5 - Production/Stable",

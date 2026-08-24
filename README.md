@@ -148,3 +148,25 @@ On top of that, the first call in a fresh process pays a one-off load of the syl
 
 _Generated from `5d3aab1` on 2026-07-25, python 3.12.4 vs textstat 0.7.13, on Windows-11-10.0.26200-SP0._
 <!-- bench:perf:end -->
+
+## Third-party data
+
+The scoring resources are compiled into the extension by `include_str!`, so
+they ship inside every wheel. Their notices ship with them, under
+`textstat_rs-<version>.dist-info/licenses/`.
+
+| Data | Source | Licence | Notice |
+| --- | --- | --- | --- |
+| `cmudict.txt` | [CMU Pronouncing Dictionary](http://www.speech.cs.cmu.edu/cgi-bin/cmudict) | BSD-2-Clause-style | `src/data/cmudict-LICENSE.txt` |
+| `hyph_en_US.dic` | [pyphen](https://github.com/Kozea/Pyphen) / LibreOffice, from `hyphen.tex` | BSD-style | `src/data/README_hyph_en_US.txt` |
+| `hyph_en_GB.dic` | [pyphen](https://github.com/Kozea/Pyphen) / LibreOffice, from `ukhyphen.tex` | BSD-style | `src/data/README_hyph_en_GB.txt` |
+| `easy_words.txt` | [textstat](https://github.com/textstat/textstat) (Dale-Chall list) | MIT | covered by textstat's MIT licence |
+
+Both `.dic` files are vendored byte-for-byte from `pyphen`, and the notice files
+keep their upstream names so they can be diffed against it directly. The
+`pyphen-LICENSE.txt` note covers `pyphen` itself (GPL 2.0+/LGPL 2.1+/MPL 1.1
+tri-licence). None of `pyphen`'s code is used here, only the two dictionaries,
+which carry the BSD-style terms above.
+
+Only the data is third-party. The Rust and Python code in this repository is
+MIT, per [LICENSE](LICENSE).

@@ -134,3 +134,7 @@ def test_text_standard_parity(text):
     ]
     assert ts_grade_upper == pytest.approx(rs_grade_upper, abs=0.0)
     assert ts_grade_lower == pytest.approx(rs_grade_lower, abs=0.0)
+
+    # asserting against both int grade and full string
+    # int feeds max delta, str ensures suffixes are also the same
+    assert textstat_rs.text_standard(text) == textstat.text_standard(text)
