@@ -1,6 +1,6 @@
 [package]
 name = "textstat-rs"
-version = "2.0.0-rc.1"
+version = "2.0.0"
 edition = "2024"
 # Our code only. The vendored data in `src/data/` has its own terms; see the
 # notices listed next to `license-files` in pyproject.toml.
