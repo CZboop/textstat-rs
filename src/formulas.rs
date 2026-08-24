@@ -188,7 +188,7 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
     let score = flesch_kincaid_grade(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
-    let near = score.round() as i32;
+    let near = score.round_ties_even() as i32;
 
     grade.extend([lower, upper, near]);
 
@@ -217,28 +217,28 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
     let score = smog_index(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
-    let near = score.round() as i32;
+    let near = score.round_ties_even() as i32;
     grade.extend([lower, upper, near]);
 
     // Coleman_Liau_Index
     let score = coleman_liau_index(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
-    let near = score.round() as i32;
+    let near = score.round_ties_even() as i32;
     grade.extend([lower, upper, near]);
 
     // Automated_Readability_Index
     let score = automated_readability_index(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
-    let near = score.round() as i32;
+    let near = score.round_ties_even() as i32;
     grade.extend([lower, upper, near]);
 
     // Dale_Chall_Readability_Score
     let score = dale_chall_readability_score(stats);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
-    let near = score.round() as i32;
+    let near = score.round_ties_even() as i32;
     grade.extend([lower, upper, near]);
 
     // Linsear_Write_Formula
@@ -246,7 +246,7 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
     let score = linsear_write_formula(stats, false, true);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
-    let near = score.round() as i32;
+    let near = score.round_ties_even() as i32;
     grade.extend([lower, upper, near]);
 
     // Appending Gunning Fog Index
@@ -254,7 +254,7 @@ pub(crate) fn text_standard(text: &str, stats: &TextStats) -> String {
     let score = gunning_fog(stats, 3);
     let lower = score.floor() as i32;
     let upper = score.ceil() as i32;
-    let near = score.round() as i32;
+    let near = score.round_ties_even() as i32;
     grade.extend([lower, upper, near]);
 
     // Finding the Readability Consensus based on all the above tests
